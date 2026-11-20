@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mureka Balance Check</title>
+<style>
+body {
+    background: #071426;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 25px;
+}
+input, button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    box-sizing: border-box;
+    border-radius: 8px;
+}
+button {
+    background: #258cff;
+    color: white;
+    border: 0;
+    font-weight: bold;
+}
+#result {
+    margin-top: 20px;
+    overflow-wrap: anywhere;
+}
+</style>
+</head>
+<body>
+
+<h2>GENERAL MUSIC AI</h2>
+<h3>Mureka Account Balance</h3>
+
+<input
+    id="token"
+    type="password"
+    placeholder="Enter billing security token"
+    autocomplete="off"
+>
+
+<button onclick="checkBalance()">
+    CHECK BALANCE
+</button>
+
+<div id="result"></div>
+
+<script>
+async function checkBalance() {
+
+    const token = document.getElementById("token").value;
+    const result = document.getElementById("result");
+
+    if (!token) {
+        result.textContent = "Enter your security token.";
+        return;
+    }
+
+    result.textContent = "Checking balance...";
+
+    try {
+
+        const response = await fetch(
+            "/api/mureka/balance",
+            {
+                method: "GET",
+                headers: {
+                    "x-billing-check-token": token
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        document.getElementById("token").value = "";
+
+        result.textContent = response.ok
+            ? JSON.stringify(data, null, 2)
+            : "Check failed: " + data.message;
+
+    } catch (error) {
+
+        result.textContent = "Connection error. Try again.";
+
+    }
+}
+</script>
+
+</body>
+</html>

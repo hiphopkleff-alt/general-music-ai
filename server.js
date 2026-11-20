@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const express = require("express");
 const helmet = require("helmet");
 const path = require("path");
@@ -424,6 +425,71 @@ app.get("/api/music/task/:type/:id", async (req, res) => {
 
 });
 
+// SECURE MUREKA BALANCE CHECK
+app.get("/api/mureka/balance", async (req, res) => {
+
+    try {
+
+        const suppliedToken =
+            req.get("x-billing-check-token") || "";
+
+        const savedToken =
+            process.env.BILLING_CHECK_TOKEN || "";
+
+        if (!savedToken || !suppliedToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized."
+            });
+        }
+
+        const suppliedBuffer =
+            Buffer.from(suppliedToken);
+
+        const savedBuffer =
+            Buffer.from(savedToken);
+
+        if (
+            suppliedBuffer.length !== savedBuffer.length ||
+            !crypto.timingSafeEqual(
+                suppliedBuffer,
+                savedBuffer
+            )
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized."
+            });
+        }
+
+        const result = await murekaRequest(
+            "/v1/account/billing",
+            "GET"
+        );
+
+        res.json({
+            success: true,
+            balanceUSD: result.balance / 100,
+            totalRechargeUSD: result.total_recharge / 100,
+            totalSpendingUSD: result.total_spending / 100,
+            currency: "USD"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Mureka balance check failed:",
+            error.message
+        );
+
+        res.status(error.status || 502).json({
+            success: false,
+            message: "Unable to retrieve Mureka balance."
+        });
+
+    }
+
+});
 
 // UNKNOWN API ROUTES
 app.use("/api", (req, res) => {

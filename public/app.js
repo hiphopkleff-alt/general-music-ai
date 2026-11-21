@@ -692,23 +692,93 @@ checkMusicTask(
     }    
     if (page === "lyrics") {
 
-        document.getElementById("lyricsForm")
-        .addEventListener("submit", event => {
+    const lyricsForm = document.getElementById("lyricsForm");
 
-            event.preventDefault();
+    lyricsForm.addEventListener("submit", async event => {
 
-            document.getElementById(
-                "lyricsResult"
-            ).innerHTML = `
+        event.preventDefault();
+
+        const theme = document.getElementById("lyricsTheme").value.trim();
+        const genre = document.getElementById("lyricsGenre").value;
+
+        const resultBox = document.getElementById("lyricsResult");
+
+        if (!theme) {
+            resultBox.innerHTML = `
                 <div class="tool-card">
-                    <h3>Lyrics Request Prepared</h3>
-                    <p>Your songwriting request is ready for AI integration.</p>
+                    <h3>⚠️ Missing Song Theme</h3>
+                    <p>Please describe your song theme.</p>
+                </div>
+            `;
+            return;
+        }
+
+        resultBox.innerHTML = `
+            <div class="tool-card">
+                <h3>⏳ Preparing Lyrics Request</h3>
+                <p>Connecting to GENERAL MUSIC AI server...</p>
+            </div>
+        `;
+
+        try {
+
+            const response = await fetch(
+                "/api/music/generate-lyrics",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prompt: `Write original ${genre} song lyrics about: ${theme}`
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                resultBox.innerHTML = `
+                    <div class="tool-card">
+                        <h3>🔐 LYRICS GENERATION PAUSED</h3>
+                        <p>${escapeHTML(data.message || "Lyrics generation is currently unavailable.")}</p>
+                        <p>✅ No Mureka credits have been used.</p>
+                    </div>
+                `;
+
+                return;
+            }
+
+            const lyrics = data.lyrics;
+
+            resultBox.innerHTML = `
+                <div class="tool-card">
+                    <h3>🎵 YOUR GENERATED LYRICS</h3>
+                    <div style="white-space:pre-wrap; line-height:1.8;">
+                        ${escapeHTML(
+                            typeof lyrics === "string"
+                                ? lyrics
+                                : JSON.stringify(lyrics, null, 2)
+                        )}
+                    </div>
                 </div>
             `;
 
-        });
+        } catch (error) {
 
-    }
+            resultBox.innerHTML = `
+                <div class="tool-card">
+                    <h3>⚠️ CONNECTION ERROR</h3>
+                    <p>${escapeHTML(error.message)}</p>
+                </div>
+            `;
+
+        }
+
+    });
+
+}
 
     if (page === "drums") {
 

@@ -8,6 +8,8 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 const MUREKA_URL = "https://api.mureka.ai";
+// PAID GENERATION SAFETY SWITCH
+const MUREKA_GENERATION_ENABLED = false;
 
 
 // SECURITY
@@ -171,6 +173,13 @@ const allowedModels = [
 app.post("/api/music/generate-song", async (req, res) => {
 
     try {
+        
+ if (!MUREKA_GENERATION_ENABLED) {
+            return res.status(503).json({
+                success: false,
+                message: "Music generation is temporarily paused. No Mureka credits have been used."
+            });
+                }
 
         const {
             lyrics,
@@ -284,6 +293,13 @@ app.post("/api/music/generate-instrumental", async (req, res) => {
 
     try {
 
+            if (!MUREKA_GENERATION_ENABLED) {
+            return res.status(503).json({
+                success: false,
+                message: "Instrumental generation is temporarily paused. No Mureka credits have been used."
+            });
+        }
+
         const {
             prompt,
             model
@@ -354,6 +370,13 @@ app.post("/api/music/generate-instrumental", async (req, res) => {
 app.post("/api/music/generate-lyrics", async (req, res) => {
 
     try {
+
+                if (!MUREKA_GENERATION_ENABLED) {
+            return res.status(503).json({
+                success: false,
+                message: "AI lyrics generation is temporarily paused. No Mureka credits have been used."
+            });
+                }
 
         const { prompt } = req.body;
 

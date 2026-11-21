@@ -403,6 +403,9 @@ async function checkMusicTask(taskId, statusElement, title) {
                 "gtp_music_tasks",
                 JSON.stringify(updatedTasks)
             );
+           if (currentPage === "music") {
+    renderMusicCollection();
+           }
 
             if (statusElement && statusElement.isConnected) {
 

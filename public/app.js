@@ -469,7 +469,6 @@ async function checkMusicTask(taskId, statusElement, title) {
     }
 
 }
-
 /* ==================================
    MY MUSIC LIBRARY
 ================================== */
@@ -497,21 +496,62 @@ function renderMusicCollection() {
         return;
     }
 
-    collection.innerHTML = savedTasks.map(song => `
-        <div class="tool-card">
-            <h3>🎵 ${escapeHTML(song.title || "Untitled Song")}</h3>
-            <p>Type: ${escapeHTML(song.type || "song")}</p>
-            <p>Status: ${escapeHTML(song.status || "preparing")}</p>
-            <p>Task ID: ${escapeHTML(song.id)}</p>
-            <p>Created: ${escapeHTML(
-                song.createdAt
-                    ? new Date(song.createdAt).toLocaleString()
-                    : "Unknown"
-            )}</p>
-        </div>
-    `).join("");
+    collection.innerHTML = savedTasks.map(song => {
+
+        const audioPlayer = song.audioUrl
+            ? `
+                <audio controls preload="none" style="width:100%; margin-top:12px;">
+                    <source src="${escapeHTML(song.audioUrl)}" type="audio/wav">
+                    Your browser does not support audio playback.
+                </audio>
+
+                <a
+                    class="primary-btn"
+                    href="${escapeHTML(song.audioUrl)}"
+                    download="${escapeHTML(song.title || "My Song")}.wav"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="display:inline-block; margin-top:12px; text-decoration:none;"
+                >
+                    ⬇️ Download Song
+                </a>
+            `
+            : `
+                <p>🎧 Audio will appear here when generation succeeds.</p>
+            `;
+
+        return `
+            <div class="tool-card">
+
+                <h3>🎵 ${escapeHTML(song.title || "Untitled Song")}</h3>
+
+                <p>Type: ${escapeHTML(song.type || "song")}</p>
+
+                <p>Status: ${escapeHTML(song.status || "preparing")}</p>
+
+                ${audioPlayer}
+
+                <p style="font-size:12px; opacity:0.7; margin-top:12px;">
+                    Task ID: ${escapeHTML(song.id)}
+                </p>
+
+                <p style="font-size:12px; opacity:0.7;">
+                    Created: ${escapeHTML(
+                        song.createdAt
+                            ? new Date(song.createdAt).toLocaleString()
+                            : "Unknown"
+                    )}
+                </p>
+
+            </div>
+        `;
+
+    }).join("");
 
 }
+
+
+
 function initializePage(page) {
        if (page === "music") {
 

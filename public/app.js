@@ -404,13 +404,40 @@ function initializePage(page) {
                     );
                 }
 
-                status.innerHTML = `
-                    <div class="tool-card">
-                        <h3>✅ SONG REQUEST ACCEPTED</h3>
-                        <p>Your request reached Mureka.</p>
-                        <p>Task information received.</p>
-                    </div>
-                `;
+                const task = result.task;
+
+if (!task || !task.id) {
+    throw new Error("No task ID was returned by the music server.");
+}
+
+const savedTasks = JSON.parse(
+    localStorage.getItem("gtp_music_tasks") || "[]"
+);
+
+const newTask = {
+    id: task.id,
+    title: title,
+    type: "song",
+    status: task.status || "preparing",
+    createdAt: new Date().toISOString()
+};
+
+savedTasks.unshift(newTask);
+
+localStorage.setItem(
+    "gtp_music_tasks",
+    JSON.stringify(savedTasks)
+);
+
+status.innerHTML = `
+    <div class="tool-card">
+        <h3>✅ SONG TASK CREATED</h3>
+        <p>Title: ${escapeHTML(title)}</p>
+        <p>Task ID: ${escapeHTML(task.id)}</p>
+        <p>Status: ${escapeHTML(task.status || "preparing")}</p>
+        <p>Your generation request has been recorded.</p>
+    </div>
+`;
 
             } catch (error) {
 

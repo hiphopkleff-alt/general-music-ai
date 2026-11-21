@@ -328,6 +328,110 @@ function handleAudioUpload(inputId, statusId) {
 /* ==================================
    GENERATION FORM
 ================================== */
+async function checkMusicTask(taskId, statusElement, title) {
+
+const terminalStatuses = [
+    "succeeded",
+    "failed",
+    "timeouted",
+    "cancelled"
+];
+
+let attempts = 0;
+const maxAttempts = 60;
+
+while (attempts < maxAttempts) {
+
+    attempts++;
+
+    try {
+
+        const response = await fetch(
+            `/api/music/task/song/${encodeURIComponent(taskId)}`
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || "Unable to check task status."
+            );
+        }
+
+        const task = result.task;
+        const taskStatus = String(
+            task.status || "processing"
+        ).toLowerCase();
+
+        const savedTasks = JSON.parse(
+            localStorage.getItem("gtp_music_tasks") || "[]"
+        );
+
+        const updatedTasks = savedTasks.map(item =>
+            item.id === taskId
+                ? { ...item, status: taskStatus }
+                : item
+        );
+
+        localStorage.setItem(
+            "gtp_music_tasks",
+            JSON.stringify(updatedTasks)
+        );
+
+        if (statusElement && statusElement.isConnected) {
+
+            statusElement.innerHTML = `
+                <div class="tool-card">
+                    <h3>🎵 ${escapeHTML(title)}</h3>
+                    <p>Generation status: ${escapeHTML(taskStatus)}</p>
+                    <p>Check ${attempts} of ${maxAttempts}</p>
+                </div>
+            `;
+
+        }
+
+        if (terminalStatuses.includes(taskStatus)) {
+
+            if (statusElement && statusElement.isConnected) {
+
+                statusElement.innerHTML = `
+                    <div class="tool-card">
+                        <h3>${taskStatus === "succeeded"
+                            ? "✅ SONG GENERATION COMPLETED"
+                            : "⚠️ GENERATION ENDED"}</h3>
+                        <p>${escapeHTML(title)}</p>
+                        <p>Status: ${escapeHTML(taskStatus)}</p>
+                    </div>
+                `;
+
+            }
+
+            return;
+        }
+
+    } catch (error) {
+
+        if (statusElement && statusElement.isConnected) {
+
+            statusElement.innerHTML = `
+                <div class="tool-card">
+                    <h3>⚠️ STATUS CHECK ERROR</h3>
+                    <p>${escapeHTML(error.message)}</p>
+                </div>
+            `;
+
+        }
+
+        return;
+    }
+
+    await new Promise(resolve =>
+        setTimeout(resolve, 10000)
+    );
+
+}
+
+               }
 
 function initializePage(page) {
 
@@ -438,6 +542,12 @@ status.innerHTML = `
         <p>Your generation request has been recorded.</p>
     </div>
 `;
+
+checkMusicTask(
+    task.id,
+    status,
+    title
+);
 
             } catch (error) {
 

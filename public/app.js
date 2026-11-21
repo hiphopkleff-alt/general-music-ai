@@ -19,17 +19,36 @@ const pages = {
 
     dashboard: originalDashboard,
 
-    create: `
+      create: `
         <section class="library">
             <h2>🎵 AI MUSIC GENERATOR</h2>
-            <p class="description">Turn your imagination into music.</p>
+            <p class="description">
+                Turn your imagination into music.
+            </p>
 
             <form id="musicForm">
 
-                <label>Describe your music</label>
-                <textarea id="musicPrompt"
-                placeholder="Describe the song you want to create..."
-                required></textarea>
+                <label>Song Title</label>
+                <input
+                    id="songTitle"
+                    type="text"
+                    placeholder="Enter your song title"
+                    required
+                >
+
+                <label>Describe Your Music</label>
+                <textarea
+                    id="musicPrompt"
+                    placeholder="Describe the sound, mood and instruments..."
+                    required
+                ></textarea>
+
+                <label>Write or Paste Your Lyrics</label>
+                <textarea
+                    id="songLyrics"
+                    placeholder="Enter your original song lyrics here..."
+                    required
+                ></textarea>
 
                 <label>Music Genre</label>
                 <select id="genre">
@@ -40,24 +59,29 @@ const pages = {
                     <option>R&B</option>
                     <option>Reggae</option>
                     <option>Pop</option>
+                    <option>Highlife</option>
                     <option>Jazz</option>
                     <option>Electronic</option>
                 </select>
 
                 <label>Vocal Style</label>
                 <select id="vocal">
-                    <option>Male Vocals</option>
-                    <option>Female Vocals</option>
-                    <option>Duet</option>
-                    <option>Instrumental Only</option>
+                    <option value="male">Male Vocals</option>
+                    <option value="female">Female Vocals</option>
                 </select>
 
-                <label>Song Title</label>
-                <input id="songTitle"
-                placeholder="Enter song title">
+                <label>AI Music Model</label>
+                <select id="musicModel">
+                    <option value="auto">Automatic</option>
+                    <option value="mureka-7.6">Mureka 7.6</option>
+                    <option value="mureka-o2">Mureka O2</option>
+                    <option value="mureka-8">Mureka 8</option>
+                    <option value="mureka-9">Mureka 9</option>
+                    <option value="mureka-9.5">Mureka 9.5</option>
+                </select>
 
                 <button class="primary-btn" type="submit">
-                    ✨ Generate Music
+                    ✨ Generate AI Song
                 </button>
 
             </form>
@@ -65,7 +89,7 @@ const pages = {
             <div id="generationStatus"></div>
         </section>
     `,
-
+    
     lyrics: `
         <section class="library">
             <h2>✍️ LYRICS STUDIO</h2>
@@ -307,20 +331,52 @@ function handleAudioUpload(inputId, statusId) {
 
 function initializePage(page) {
 
-    if (page === "create") {
+        if (page === "create") {
 
-        document.getElementById("musicForm")
-        .addEventListener("submit", event => {
+        const musicForm = document.getElementById("musicForm");
+
+        musicForm.addEventListener("submit", event => {
 
             event.preventDefault();
 
-            document.getElementById(
-                "generationStatus"
-            ).innerHTML = `
+            const title = document.getElementById("songTitle").value.trim();
+            const prompt = document.getElementById("musicPrompt").value.trim();
+            const lyrics = document.getElementById("songLyrics").value.trim();
+            const genre = document.getElementById("genre").value;
+            const vocal = document.getElementById("vocal").value;
+            const model = document.getElementById("musicModel").value;
+
+            const status = document.getElementById("generationStatus");
+
+            if (!title || !prompt || !lyrics) {
+                status.innerHTML = `
+                    <div class="tool-card">
+                        <h3>⚠️ Missing Information</h3>
+                        <p>Please complete all required fields.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const songRequest = {
+                title,
+                prompt,
+                lyrics,
+                genre,
+                gender: vocal,
+                model
+            };
+
+            status.innerHTML = `
                 <div class="tool-card">
-                    <h3>🎵 Generation Setup Complete</h3>
-                    <p>Your music request is ready.</p>
-                    <p>AI music API connection is the next stage.</p>
+                    <h3>✅ SONG REQUEST VALIDATED</h3>
+                    <p><strong>Title:</strong> ${escapeHTML(songRequest.title)}</p>
+                    <p><strong>Genre:</strong> ${escapeHTML(songRequest.genre)}</p>
+                    <p><strong>Vocal:</strong> ${escapeHTML(songRequest.gender)}</p>
+                    <p><strong>Model:</strong> ${escapeHTML(songRequest.model)}</p>
+                    <p>Your song request is ready.</p>
+                    <p>⚠️ Mureka generation is paused until API credits are available.</p>
+                    <p>No paid API request was sent.</p>
                 </div>
             `;
 

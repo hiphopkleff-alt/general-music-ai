@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const express = require("express");
 const helmet = require("helmet");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 
@@ -103,11 +104,18 @@ app.get("/api/health", (req, res) => {
                 ? "configured"
                 : "not_configured",
 
-        stemSeparation: "not_connected"
+        stemSeparation: "not_connected",
+
+        staticFiles: {
+            index: fs.existsSync(path.join(__dirname, "public", "index.html")),
+            css: fs.existsSync(path.join(__dirname, "public", "style.css")),
+            js: fs.existsSync(path.join(__dirname, "public", "app.js")),
+            billing: fs.existsSync(path.join(__dirname, "public", "billing-check.html"))
+        }
+
     });
 
 });
-
 
 // APPLICATION INFORMATION
 app.get("/api/info", (req, res) => {

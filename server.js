@@ -90,30 +90,47 @@ async function murekaRequest(endpoint, method, data = null) {
 // HEALTH CHECK
 app.get("/api/health", (req, res) => {
 
-    res.json({
-        success: true,
-        application: "GENERAL MUSIC AI",
-        version: "V1.0",
-        status: "online",
+res.json({
+    success: true,
+    application: "GENERAL MUSIC AI",
+    version: "V1.0",
+    status: "online",
 
-        murekaKeyConfigured:
-            Boolean(process.env.MUREKA_API_KEY),
+    murekaKeyConfigured:
+        Boolean(process.env.MUREKA_API_KEY),
 
-        musicGeneration:
-            process.env.MUREKA_API_KEY
-                ? "configured"
-                : "not_configured",
+    musicGeneration:
+        process.env.MUREKA_API_KEY
+            ? "configured"
+            : "not_configured",
 
-        stemSeparation: "not_connected",
+    stemSeparation: "not_connected",
 
-        staticFiles: {
-            index: fs.existsSync(path.join(__dirname, "public", "index.html")),
-            css: fs.existsSync(path.join(__dirname, "public", "style.css")),
-            js: fs.existsSync(path.join(__dirname, "public", "app.js")),
-            billing: fs.existsSync(path.join(__dirname, "public", "billing-check.html"))
-        }
+    staticFiles: {
+        publicFolderExists: fs.existsSync(
+            path.join(__dirname, "public")
+        ),
 
-    });
+        serverDirectory: fs.readdirSync(__dirname),
+
+        index: fs.existsSync(
+            path.join(__dirname, "public", "index.html")
+        ),
+
+        css: fs.existsSync(
+            path.join(__dirname, "public", "style.css")
+        ),
+
+        js: fs.existsSync(
+            path.join(__dirname, "public", "app.js")
+        ),
+
+        billing: fs.existsSync(
+            path.join(__dirname, "public", "billing-check.html")
+        )
+    }
+
+});
 
 });
 

@@ -335,7 +335,7 @@ function initializePage(page) {
 
         const musicForm = document.getElementById("musicForm");
 
-        musicForm.addEventListener("submit", event => {
+        musicForm.addEventListener("submit", async event => {
 
             event.preventDefault();
 
@@ -343,7 +343,7 @@ function initializePage(page) {
             const prompt = document.getElementById("musicPrompt").value.trim();
             const lyrics = document.getElementById("songLyrics").value.trim();
             const genre = document.getElementById("genre").value;
-            const vocal = document.getElementById("vocal").value;
+            const gender = document.getElementById("vocal").value;
             const model = document.getElementById("musicModel").value;
 
             const status = document.getElementById("generationStatus");
@@ -358,32 +358,74 @@ function initializePage(page) {
                 return;
             }
 
-            const songRequest = {
-                title,
-                prompt,
-                lyrics,
-                genre,
-                gender: vocal,
-                model
-            };
-
             status.innerHTML = `
                 <div class="tool-card">
-                    <h3>✅ SONG REQUEST VALIDATED</h3>
-                    <p><strong>Title:</strong> ${escapeHTML(songRequest.title)}</p>
-                    <p><strong>Genre:</strong> ${escapeHTML(songRequest.genre)}</p>
-                    <p><strong>Vocal:</strong> ${escapeHTML(songRequest.gender)}</p>
-                    <p><strong>Model:</strong> ${escapeHTML(songRequest.model)}</p>
-                    <p>Your song request is ready.</p>
-                    <p>⚠️ Mureka generation is paused until API credits are available.</p>
-                    <p>No paid API request was sent.</p>
+                    <h3>⏳ Connecting to music server...</h3>
+                    <p>Please wait.</p>
                 </div>
             `;
 
+            try {
+
+                const response = await fetch(
+                    "/api/music/generate-song",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            lyrics,
+                            prompt,
+                            gender,
+                            model
+                        })
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+
+                    if (response.status === 503) {
+                        status.innerHTML = `
+                            <div class="tool-card">
+                                <h3>🔐 BACKEND CONNECTION SUCCESSFUL</h3>
+                                <p>Your request reached our server.</p>
+                                <p>${escapeHTML(result.message)}</p>
+                                <p>✅ No Mureka generation was started.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    throw new Error(
+                        result.message || "Server request failed."
+                    );
+                }
+
+                status.innerHTML = `
+                    <div class="tool-card">
+                        <h3>✅ SONG REQUEST ACCEPTED</h3>
+                        <p>Your request reached Mureka.</p>
+                        <p>Task information received.</p>
+                    </div>
+                `;
+
+            } catch (error) {
+
+                status.innerHTML = `
+                    <div class="tool-card">
+                        <h3>❌ CONNECTION ERROR</h3>
+                        <p>${escapeHTML(error.message)}</p>
+                    </div>
+                `;
+
+            }
+
         });
 
-    }
-
+    }    
     if (page === "lyrics") {
 
         document.getElementById("lyricsForm")

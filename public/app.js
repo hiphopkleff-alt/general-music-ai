@@ -433,7 +433,54 @@ while (attempts < maxAttempts) {
 
                }
 
+/* ==================================
+   MY MUSIC LIBRARY
+================================== */
+
+function renderMusicCollection() {
+
+    const collection = document.getElementById("musicCollection");
+
+    if (!collection) return;
+
+    const savedTasks = JSON.parse(
+        localStorage.getItem("gtp_music_tasks") || "[]"
+    );
+
+    if (!savedTasks.length) {
+
+        collection.innerHTML = `
+            <div class="empty-state">
+                <div>🎼</div>
+                <h3>Your music collection is empty</h3>
+                <p>Generated songs will appear here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    collection.innerHTML = savedTasks.map(song => `
+        <div class="tool-card">
+            <h3>🎵 ${escapeHTML(song.title || "Untitled Song")}</h3>
+            <p>Type: ${escapeHTML(song.type || "song")}</p>
+            <p>Status: ${escapeHTML(song.status || "preparing")}</p>
+            <p>Task ID: ${escapeHTML(song.id)}</p>
+            <p>Created: ${escapeHTML(
+                song.createdAt
+                    ? new Date(song.createdAt).toLocaleString()
+                    : "Unknown"
+            )}</p>
+        </div>
+    `).join("");
+
+}
 function initializePage(page) {
+       if (page === "music") {
+
+        renderMusicCollection();
+
+    }
 
         if (page === "create") {
 

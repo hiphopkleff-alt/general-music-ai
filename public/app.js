@@ -2386,17 +2386,14 @@ document.addEventListener("click", event => {
 
     if (!target) return;
 
-    // Real navigation links use their own href and browser page loading.
-    // This keeps navigation working even when JavaScript is unavailable.
-    if (target.tagName === "A") return;
+    const destination = target.dataset.page;
 
-    // Keep page-changing buttons (for example, the dashboard CTA) working.
-    const destination = pagePaths[target.dataset.page];
+    if (!pages[destination]) return;
 
-    if (destination) {
-        event.preventDefault();
-        window.location.assign(destination);
-    }
+    // Keep navigation inside the app: render the selected feature page
+    // in the existing shell instead of loading another dashboard document.
+    event.preventDefault();
+    navigate(destination);
 });
 
 /* ==========================================

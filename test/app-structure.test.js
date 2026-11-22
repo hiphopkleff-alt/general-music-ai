@@ -75,9 +75,9 @@ test("player defaults to a usable volume and settings persist preferences", () =
     assert.ok(app.includes('localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked))'));
 });
 
-test("navigation uses in-app page rendering for links and buttons", () => {
+test("navigation loads independent page documents", () => {
     for (const [slug, [, route]] of Object.entries(pages)) {
-        for (const [otherSlug, [otherFile]] of Object.entries(pages)) {
+        for (const [, [otherFile]] of Object.entries(pages)) {
             const html = read(path.join("public", otherFile));
             assert.ok(
                 html.includes('href="' + route + '" data-page="' + slug + '"') ||
@@ -87,6 +87,9 @@ test("navigation uses in-app page rendering for links and buttons", () => {
         }
     }
 
-    assert.match(app, /event\.preventDefault\(\);\s*navigate\(destination\);/);
-    assert.doesNotMatch(app, /window\.location\.assign\(destination\);/);
+    // Let anchor links request their own HTML documents from the server.
+    assert.match(app, /target\\.tagName === "A" && target\\.hasAttribute\\("href"\\)/);
+    // Clickable dashboard cards must navigate to the matching page URL too.
+    assert.match(app, /window\\.location\\.assign\\(pagePaths\\[destination\\]\\)/);
+    assert.doesNotMatch(app, /event\\.preventDefault\\(\\);\\s*navigate\\(destination\\);/);
 });

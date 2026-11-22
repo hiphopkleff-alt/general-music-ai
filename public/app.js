@@ -2386,13 +2386,12 @@ const target = event.target.closest("[data-page]");
 
 if (!target) return;
 
-// Real navigation links load their own HTML document from the server.
-if (target.tagName === "A" && target.getAttribute("href")) {
-    return;
-}
+// Every page destination must load its own HTML document.
+const destination = pagePaths[target.dataset.page];
 
-// Keep dashboard tool cards and other non-link controls working.
-navigate(target.dataset.page);
+if (destination) {
+    window.location.assign(destination);
+}
 
 });
 
@@ -2484,9 +2483,6 @@ function restoreGlobalPlayerState() {
     const audioURL = safeAudioURL(track.audioUrl);
     if (!audioURL || !audioElement) return;
 
-    audioElement.src = audioURL;
-    audioElement.load();
-
     const restorePosition = () => {
         const requestedTime = Number(savedState.currentTime) || 0;
         if (Number.isFinite(audioElement.duration) && audioElement.duration > 0) {
@@ -2500,6 +2496,8 @@ function restoreGlobalPlayerState() {
     };
 
     audioElement.addEventListener("loadedmetadata", restorePosition, { once: true });
+    audioElement.src = audioURL;
+    audioElement.load();
     if (audioElement.readyState >= 1) restorePosition();
 }
 

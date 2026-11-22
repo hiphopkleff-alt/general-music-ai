@@ -566,8 +566,10 @@ function renderMusicCollection() {
 
                 <h3>🎵 ${escapeHTML(song.title || "Untitled Song")}</h3>
 
-                <p>Type: ${escapeHTML(song.type || "song")}</p>
-
+                
+<p style="color:#38d8ff; font-weight:bold;">
+    ${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}
+</p>
                 <p>Status: ${escapeHTML(song.status || "preparing")}</p>
 
                 ${audioPlayer}

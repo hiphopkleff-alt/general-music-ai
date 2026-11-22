@@ -115,8 +115,8 @@ const pages = {
                 </select>
 
                 <button class="primary-btn" type="submit">
-                    Generate Lyrics
-                </button>
+    🎵 GENERATE LYRICS
+</button>
 
             </form>
 

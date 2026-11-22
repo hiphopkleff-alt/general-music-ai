@@ -2293,40 +2293,46 @@ function goBack() {
         true
     );
 }
+
 /* ==========================================
 PAGE NAVIGATION
 ========================================== */
 
-function navigate(page) {
-if (!pages[page]) {
-console.warn("Unknown application page:", page);
-return;
-}
+function navigate(page, isBackNavigation = false) {
 
-currentPage = page;
+    if (!pages[page]) {
+        console.warn("Unknown application page:", page);
+        return;
+    }
 
-uploadedAudio = null;
+    if (page === currentPage && !isBackNavigation) {
+        return;
+    }
 
-app.innerHTML = pages[page];
+    if (!isBackNavigation && currentPage !== page) {
+        pageHistory.push(currentPage);
+    }
 
-document.querySelectorAll(".sidebar nav a").forEach(link => {
-    link.classList.toggle(
-        "active",
-        link.dataset.page === page
-    );
-});
+    currentPage = page;
 
-window.scrollTo(0, 0);
+    uploadedAudio = null;
 
-initializePage(page);
+    app.innerHTML = pages[page];
 
-updateDashboardStatistics();
+    document.querySelectorAll("[data-page]").forEach(link => {
+        link.classList.toggle(
+            "active",
+            link.dataset.page === page
+        );
+    });
 
-/*
-   IMPORTANT:
-   The global audio player is outside .main.
-   Replacing app.innerHTML does not destroy it.
-*/
+    addPageBackButton(page);
+
+    window.scrollTo(0, 0);
+
+    initializePage(page);
+
+    updateDashboardStatistics();
 
 }
 

@@ -86,8 +86,46 @@ const pages = {
 
             </form>
 
-            <div id="generationStatus"></div>
-        </section>
+                     <div id="generationStatus"></div>
+
+            <hr style="margin:35px 0; opacity:0.2;">
+
+            <h2>🎹 AI INSTRUMENTAL GENERATOR</h2>
+
+            <p class="description">
+                Create beats and instrumentals without vocals.
+            </p>
+
+            <form id="instrumentalForm">
+
+                <label>Describe Your Instrumental</label>
+
+                <textarea
+                    id="instrumentalPrompt"
+                    maxlength="1024"
+                    placeholder="Example: A powerful Afrobeats instrumental with deep bass, energetic drums, catchy melodies and African percussion..."
+                    required
+                ></textarea>
+
+                <label>AI Music Model</label>
+
+                <select id="instrumentalModel">
+                    <option value="auto">Automatic</option>
+                    <option value="mureka-7.6">Mureka 7.6</option>
+                    <option value="mureka-8">Mureka 8</option>
+                    <option value="mureka-9">Mureka 9</option>
+                    <option value="mureka-9.5">Mureka 9.5</option>
+                </select>
+
+                <button class="primary-btn" type="submit">
+                    🎹 GENERATE INSTRUMENTAL
+                </button>
+
+            </form>
+
+            <div id="instrumentalStatus"></div>
+
+        </section>   
     `,
     
     lyrics: `

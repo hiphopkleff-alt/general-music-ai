@@ -74,3 +74,19 @@ test("player defaults to a usable volume and settings persist preferences", () =
     assert.ok(app.includes('localStorage.setItem(PLAYER_VOLUME_KEY, String(volume))'));
     assert.ok(app.includes('localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked))'));
 });
+
+test("navigation uses real page links and only intercepts page buttons", () => {
+    for (const [slug, [, route]] of Object.entries(pages)) {
+        for (const [otherSlug, [otherFile]] of Object.entries(pages)) {
+            const html = read(path.join("public", otherFile));
+            assert.ok(
+                html.includes('href="' + route + '" data-page="' + slug + '"') ||
+                html.includes('href="' + route + '" class="active" data-page="' + slug + '"'),
+                otherFile + " links to " + slug + " using its real page URL"
+            );
+        }
+    }
+
+    assert.match(app, /if \(target\.tagName === "A"\) return;/);
+    assert.match(app, /window\.location\.assign\(destination\);/);
+});

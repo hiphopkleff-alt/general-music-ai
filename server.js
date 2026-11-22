@@ -29,7 +29,7 @@ const MUREKA_STEM_ENABLED = false;
    AUDIO UPLOAD CONFIGURATION
 ========================================== */
 
-const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
+const MAX_AUDIO_SIZE = 7 * 1024 * 1024;
 
 const upload = multer({
     storage: multer.memoryStorage(),

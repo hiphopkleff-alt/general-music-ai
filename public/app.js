@@ -2422,6 +2422,16 @@ if (page === "stems") {
 APPLICATION STARTUP
 ========================================== */
 
+/* ==========================================
+   BROWSER BACK AND FORWARD SUPPORT
+========================================== */
+
+window.addEventListener("popstate", () => {
+    const page = getPageFromPath();
+
+    navigate(page, true);
+});
+
 initializeGlobalPlayer();
 
 initializeGlobalSearch();

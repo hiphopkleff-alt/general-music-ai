@@ -262,7 +262,7 @@ app.get("/api/health", (req, res) => {
 
             enabled: true,
 
-            maximumSizeMB: 10,
+        maximumSizeMB: MAX_AUDIO_SIZE / (1024 * 1024),    
 
             supportedFormats: [
                 "mp3",

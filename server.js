@@ -1095,25 +1095,33 @@ app.use("/api", (req, res) => {
    MULTI-PAGE WEBSITE ROUTES
 ========================================== */
 
-app.get(
-    [
-        "/",
-        "/create",
-        "/lyrics",
-        "/drums",
-        "/stems",
-        "/music",
-        "/library",
-        "/settings"
-    ],
-    (req, res) => {
+/* ==========================================
+   INDEPENDENT MULTI-PAGE WEBSITE ROUTES
+========================================== */
 
-        res.sendFile(
-            path.join(__dirname, "public", "index.html")
-        );
+const pageFiles = {
+    "/": "index.html",
+    "/create": "create.html",
+    "/lyrics": "lyrics.html",
+    "/drums": "drums.html",
+    "/stems": "stems.html",
+    "/music": "music.html",
+    "/library": "library.html",
+    "/settings": "settings.html"
+};
 
-    }
-);
+app.get(Object.keys(pageFiles), (req, res, next) => {
+    const fileName = pageFiles[req.path];
+
+    if (!fileName) return next();
+
+    res.sendFile(
+        path.join(__dirname, "public", fileName),
+        error => {
+            if (error && !res.headersSent) next(error);
+        }
+    );
+});
 
 /* ==========================================
    GENERAL ERROR HANDLER

@@ -2241,7 +2241,58 @@ button.addEventListener("click", async () => {
 });
 
 }
+/* ==========================================
+PAGE HEADER + BACK BUTTON
+========================================== */
 
+function addPageBackButton(page) {
+    const heading = app.querySelector("h1, h2");
+
+    if (!heading) return;
+
+    const backButton = document.createElement("button");
+
+    backButton.type = "button";
+    backButton.textContent = "← BACK";
+    backButton.className = "page-back-button";
+
+    backButton.style.cssText = `
+        background: linear-gradient(135deg, #087cff, #853bff);
+        color: #ffffff;
+        border: none;
+        border-radius: 9px;
+        padding: 9px 15px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-right: 14px;
+        flex-shrink: 0;
+    `;
+
+    backButton.addEventListener("click", goBack);
+
+    heading.style.display = "flex";
+    heading.style.alignItems = "center";
+    heading.style.flexWrap = "wrap";
+    heading.style.gap = "8px";
+
+    heading.prepend(backButton);
+}
+
+/* ==========================================
+GO BACK TO PREVIOUS PAGE
+========================================== */
+
+function goBack() {
+    const previousPage = pageHistory.pop();
+
+    navigate(
+        previousPage && pages[previousPage]
+            ? previousPage
+            : "dashboard",
+        true
+    );
+}
 /* ==========================================
 PAGE NAVIGATION
 ========================================== */

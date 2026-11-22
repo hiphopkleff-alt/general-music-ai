@@ -2435,6 +2435,11 @@ APPLICATION STARTUP
 ========================================== */
 
 window.addEventListener("popstate", () => {
+
+    if (pageHistory.length > 0) {
+        pageHistory.pop();
+    }
+
     const page = getPageFromPath();
 
     navigate(page, true);

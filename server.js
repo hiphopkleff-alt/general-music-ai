@@ -1091,6 +1091,29 @@ app.use("/api", (req, res) => {
 
 });
 
+/* ==========================================
+   MULTI-PAGE WEBSITE ROUTES
+========================================== */
+
+app.get(
+    [
+        "/",
+        "/create",
+        "/lyrics",
+        "/drums",
+        "/stems",
+        "/music",
+        "/library",
+        "/settings"
+    ],
+    (req, res) => {
+
+        res.sendFile(
+            path.join(__dirname, "public", "index.html")
+        );
+
+    }
+);
 
 /* ==========================================
    GENERAL ERROR HANDLER

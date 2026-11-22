@@ -2382,19 +2382,21 @@ NAVIGATION CLICK HANDLER
 ========================================== */
 
 document.addEventListener("click", event => {
-const target = event.target.closest("[data-page]");
+    const target = event.target.closest("[data-page]");
 
-if (!target) return;
+    if (!target) return;
 
-// Every page destination must load its own HTML document.
-const destination = pagePaths[target.dataset.page];
+    // Real navigation links use their own href and browser page loading.
+    // This keeps navigation working even when JavaScript is unavailable.
+    if (target.tagName === "A") return;
 
-if (destination) {
-    // Prevent the anchor's default navigation from firing a second time.
-    event.preventDefault();
-    window.location.assign(destination);
-}
+    // Keep page-changing buttons (for example, the dashboard CTA) working.
+    const destination = pagePaths[target.dataset.page];
 
+    if (destination) {
+        event.preventDefault();
+        window.location.assign(destination);
+    }
 });
 
 /* ==========================================

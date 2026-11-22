@@ -2284,14 +2284,22 @@ GO BACK TO PREVIOUS PAGE
 ========================================== */
 
 function goBack() {
-    const previousPage = pageHistory.pop();
 
-    navigate(
-        previousPage && pages[previousPage]
-            ? previousPage
-            : "dashboard",
-        true
+    if (pageHistory.length > 0) {
+        window.history.back();
+        return;
+    }
+
+    // No previous app page: return to Dashboard
+    pageHistory.length = 0;
+
+    window.history.replaceState(
+        { page: "dashboard" },
+        "",
+        "/"
     );
+
+    navigate("dashboard", true);
 }
 
 /* ==========================================

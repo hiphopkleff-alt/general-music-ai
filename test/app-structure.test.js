@@ -75,7 +75,7 @@ test("player defaults to a usable volume and settings persist preferences", () =
     assert.ok(app.includes('localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked))'));
 });
 
-test("navigation uses real page links and only intercepts page buttons", () => {
+test("navigation uses in-app page rendering for links and buttons", () => {
     for (const [slug, [, route]] of Object.entries(pages)) {
         for (const [otherSlug, [otherFile]] of Object.entries(pages)) {
             const html = read(path.join("public", otherFile));
@@ -87,6 +87,6 @@ test("navigation uses real page links and only intercepts page buttons", () => {
         }
     }
 
-    assert.match(app, /if \(target\.tagName === "A"\) return;/);
-    assert.match(app, /window\.location\.assign\(destination\);/);
+    assert.match(app, /event\.preventDefault\(\);\s*navigate\(destination\);/);
+    assert.doesNotMatch(app, /window\.location\.assign\(destination\);/);
 });

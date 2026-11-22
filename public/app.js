@@ -513,7 +513,6 @@ async function checkMusicTask(taskId, statusElement, title, type = "song") {
 /* ==================================
    MY MUSIC LIBRARY
 ================================== */
-
 function renderMusicCollection() {
 
     const collection = document.getElementById("musicCollection");
@@ -525,7 +524,6 @@ function renderMusicCollection() {
     );
 
     if (!savedTasks.length) {
-
         collection.innerHTML = `
             <div class="empty-state">
                 <div>🎼</div>
@@ -533,8 +531,37 @@ function renderMusicCollection() {
                 <p>Generated songs will appear here.</p>
             </div>
         `;
-
         return;
+    }
+
+    if (!collection.dataset.deleteHandlerAttached) {
+
+        collection.addEventListener("click", event => {
+
+            const button = event.target.closest("[data-delete-music]");
+
+            if (!button) return;
+
+            const id = button.dataset.deleteMusic;
+
+            if (!confirm("Are you sure you want to delete this track?")) {
+                return;
+            }
+
+            const tasks = JSON.parse(
+                localStorage.getItem("gtp_music_tasks") || "[]"
+            );
+
+            localStorage.setItem(
+                "gtp_music_tasks",
+                JSON.stringify(tasks.filter(song => song.id !== id))
+            );
+
+            renderMusicCollection();
+
+        });
+
+        collection.dataset.deleteHandlerAttached = "true";
     }
 
     collection.innerHTML = savedTasks.map(song => {
@@ -542,19 +569,18 @@ function renderMusicCollection() {
         const audioPlayer = song.audioUrl
             ? `
                 <audio controls preload="none" style="width:100%; margin-top:12px;">
-                    <source src="${escapeHTML(song.audioUrl)}" type="audio/wav">
-                    Your browser does not support audio playback.
+                    <source src="${escapeHTML(song.audioUrl)}">
                 </audio>
 
                 <a
                     class="primary-btn"
                     href="${escapeHTML(song.audioUrl)}"
-                    download="${escapeHTML(song.title || "My Song")}.wav"
+                    download
                     target="_blank"
                     rel="noopener noreferrer"
                     style="display:inline-block; margin-top:12px; text-decoration:none;"
                 >
-                    ⬇️ Download Song
+                    ⬇️ Download Track
                 </a>
             `
             : `
@@ -566,25 +592,28 @@ function renderMusicCollection() {
 
                 <h3>🎵 ${escapeHTML(song.title || "Untitled Song")}</h3>
 
-                
-<p style="color:#38d8ff; font-weight:bold;">
-    ${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}
-</p>
+                <p style="color:#38d8ff; font-weight:bold;">
+                    ${song.type === "instrumental"
+                        ? "🎹 AI INSTRUMENTAL"
+                        : "🎤 FULL AI SONG"}
+                </p>
+
                 <p>Status: ${escapeHTML(song.status || "preparing")}</p>
 
                 ${audioPlayer}
 
-                <p style="font-size:12px; opacity:0.7; margin-top:12px;">
+                <p style="font-size:12px; opacity:0.7;">
                     Task ID: ${escapeHTML(song.id)}
                 </p>
 
-                <p style="font-size:12px; opacity:0.7;">
-                    Created: ${escapeHTML(
-                        song.createdAt
-                            ? new Date(song.createdAt).toLocaleString()
-                            : "Unknown"
-                    )}
-                </p>
+                <button
+                    class="primary-btn"
+                    type="button"
+                    data-delete-music="${escapeHTML(song.id)}"
+                    style="margin-top:15px; background:#ff4757;"
+                >
+                    🗑️ DELETE TRACK
+                </button>
 
             </div>
         `;

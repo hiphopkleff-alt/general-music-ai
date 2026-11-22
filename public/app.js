@@ -415,9 +415,8 @@ console.warn("Global audio player is unavailable.");
 return;
 }
 
-const savedVolume = Number(
-    localStorage.getItem(PLAYER_VOLUME_KEY)
-);
+const storedVolume = localStorage.getItem(PLAYER_VOLUME_KEY);
+const savedVolume = storedVolume === null ? 0.8 : Number(storedVolume);
 
 const initialVolume = Number.isFinite(savedVolume)
     ? Math.max(0, Math.min(1, savedVolume))

@@ -910,7 +910,7 @@ console.log("Stem separation result:", stemData);
 
                 status.textContent = error.message;
 
-            } finally {
+                        } finally {
 
                 separateButton.disabled = false;
 
@@ -921,10 +921,12 @@ console.log("Stem separation result:", stemData);
     }
 
 }
+
+}
+
 /* ==================================
    SECURITY HELPER
 ================================== */
-
 function escapeHTML(value) {
 
     return String(value).replace(/[&<>"']/g, char => ({

@@ -307,20 +307,14 @@ const pages = {
     `,
 
 
-    /* ======================================
-       LYRICS STUDIO
-    ====================================== */
+   lyrics: `
 
-    lyrics: `
+    <section class="library lyrics-page">
 
-        <section class="library">
+        <h2>✍️ LYRICS STUDIO</h2>
 
-            <h2>✍️ LYRICS STUDIO</h2>
 
-            <p>
-                Create original lyrics for your next song.
-            </p>
-
+        <div class="generator-panel">
 
             <form id="lyricsForm">
 
@@ -332,11 +326,9 @@ const pages = {
                     required
                 ></textarea>
 
-
                 <label>Music Style</label>
 
                 <select id="lyricsGenre">
-
                     <option>Afrobeats</option>
                     <option>Gospel</option>
                     <option>Hip-Hop</option>
@@ -345,9 +337,7 @@ const pages = {
                     <option>Reggae</option>
                     <option>Highlife</option>
                     <option>Pop</option>
-
                 </select>
-
 
                 <button class="primary-btn" type="submit">
                     🎵 GENERATE LYRICS
@@ -355,64 +345,58 @@ const pages = {
 
             </form>
 
-
-            <div id="lyricsResult"></div>
-
-
-            <div class="tool-card" style="margin-top:20px;">
-
-                <h3>📝 LYRICS EDITOR</h3>
-
-                <p>Edit, copy or download your lyrics.</p>
+        </div>
 
 
-                <textarea
-                    id="lyricsEditor"
-                    rows="14"
-                    placeholder="Write or paste your lyrics here..."
-                    style="width:100%; min-height:250px; resize:vertical;"
-                ></textarea>
+        <div id="lyricsResult"></div>
 
 
-                <div class="tools" style="margin-top:15px;">
+        <div class="tool-card lyrics-editor-card">
 
-                    <button
-                        class="primary-btn"
-                        id="copyLyrics"
-                        type="button"
-                    >
-                        📋 COPY LYRICS
-                    </button>
+            <h3>📝 LYRICS EDITOR</h3>
 
-
-                    <button
-                        class="primary-btn"
-                        id="downloadLyrics"
-                        type="button"
-                    >
-                        ⬇️ DOWNLOAD LYRICS
-                    </button>
+            <textarea
+                id="lyricsEditor"
+                rows="14"
+                placeholder="Write or paste your lyrics here..."
+            ></textarea>
 
 
-                    <button
-                        class="primary-btn"
-                        id="clearLyrics"
-                        type="button"
-                    >
-                        🗑️ CLEAR LYRICS
-                    </button>
+            <div class="lyrics-actions">
 
-                </div>
+                <button
+                    class="primary-btn lyrics-action-btn"
+                    id="copyLyrics"
+                    type="button"
+                >
+                    📋 COPY LYRICS
+                </button>
 
+                <button
+                    class="primary-btn lyrics-action-btn"
+                    id="downloadLyrics"
+                    type="button"
+                >
+                    ⬇️ DOWNLOAD LYRICS
+                </button>
 
-                <div id="lyricsEditorStatus"></div>
+                <button
+                    class="primary-btn lyrics-action-btn"
+                    id="clearLyrics"
+                    type="button"
+                >
+                    🗑️ CLEAR LYRICS
+                </button>
 
             </div>
 
-        </section>
+            <div id="lyricsEditorStatus"></div>
 
-    `,
+        </div>
 
+    </section>
+
+`,
 
     /* ======================================
        DRUM SEPARATION

@@ -2295,6 +2295,29 @@ function goBack() {
 }
 
 /* ==========================================
+PAGE URL ROUTING
+========================================== */
+
+const pagePaths = {
+    dashboard: "/",
+    create: "/create",
+    lyrics: "/lyrics",
+    drums: "/drums",
+    stems: "/stems",
+    music: "/music",
+    library: "/library",
+    settings: "/settings"
+};
+
+function getPageFromPath() {
+    const currentPath = window.location.pathname;
+
+    return Object.keys(pagePaths).find(
+        page => pagePaths[page] === currentPath
+    ) || "dashboard";
+}
+
+/* ==========================================
 PAGE NAVIGATION
 ========================================== */
 

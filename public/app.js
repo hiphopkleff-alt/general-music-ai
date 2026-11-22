@@ -803,33 +803,83 @@ checkMusicTask(
 
     }
 
-    if (page === "stems") {
+   if (page === "stems") {
 
-        uploadedAudio = null;
+    uploadedAudio = null;
 
-        handleAudioUpload(
-            "stemUpload",
-            "stemStatus"
-        );
+    handleAudioUpload("stemUpload", "stemStatus");
 
-        document.getElementById("separateStems")
-        .addEventListener("click", () => {
+    const separateButton =
+        document.getElementById("separateStems");
+
+    if (separateButton) {
+
+        separateButton.addEventListener("click", async () => {
 
             if (!uploadedAudio) {
-
                 alert("Upload an audio file first.");
-
                 return;
             }
 
-            alert("Stem separation API will be connected in a later stage.");
+            const status =
+                document.getElementById("stemStatus");
+
+            const formData = new FormData();
+
+            formData.append("audio", uploadedAudio);
+
+            formData.append(
+                "model",
+                "audio-separation-2"
+            );
+
+            separateButton.disabled = true;
+
+            status.textContent =
+                "Preparing audio separation...";
+
+            try {
+
+                const response = await fetch(
+                    "/api/music/separate-stems",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message ||
+                        "Stem separation request failed."
+                    );
+                }
+
+                status.textContent =
+                    "Stem separation request accepted.";
+
+                console.log(
+                    "Stem separation result:",
+                    result
+                );
+
+            } catch (error) {
+
+                status.textContent = error.message;
+
+            } finally {
+
+                separateButton.disabled = false;
+
+            }
 
         });
 
     }
 
 }
-
 /* ==================================
    SECURITY HELPER
 ================================== */

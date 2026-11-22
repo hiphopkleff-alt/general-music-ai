@@ -37,6 +37,7 @@ const pageTitles = {
 const STORAGE_KEY = "gtp_music_tasks";
 const DOWNLOAD_KEY = "gtp_music_downloads";
 const PLAYER_VOLUME_KEY = "gtp_music_volume";
+const AUTOPLAY_NEXT_KEY = "gtp_music_autoplay_next";
 
 const MAX_AUDIO_SIZE = 7 * 1024 * 1024;
 
@@ -414,9 +415,8 @@ console.warn("Global audio player is unavailable.");
 return;
 }
 
-const savedVolume = Number(
-    localStorage.getItem(PLAYER_VOLUME_KEY)
-);
+const storedVolume = localStorage.getItem(PLAYER_VOLUME_KEY);
+const savedVolume = storedVolume === null ? 0.8 : Number(storedVolume);
 
 const initialVolume = Number.isFinite(savedVolume)
     ? Math.max(0, Math.min(1, savedVolume))
@@ -489,7 +489,11 @@ audioElement.addEventListener("play", updatePlayButton);
 
 audioElement.addEventListener("pause", updatePlayButton);
 
-audioElement.addEventListener("ended", playNextTrack);
+audioElement.addEventListener("ended", () => {
+    if (localStorage.getItem(AUTOPLAY_NEXT_KEY) !== "false") {
+        playNextTrack();
+    }
+});
 
 audioElement.addEventListener("error", () => {
     updatePlayButton();
@@ -966,33 +970,29 @@ library: `
 settings: `
 
     <section class="library">
-
         <h2>⚙️ SETTINGS</h2>
-
         <div class="tool-card">
-
             <h3>Application</h3>
-
             <p>GENERAL MUSIC AI V1.0</p>
-
+            <p>Manage your playback preferences below.</p>
         </div>
-
         <div class="tool-card">
-
-            <h3>Audio Preferences</h3>
-
-            <p>Music playback and audio settings.</p>
-
+            <h3>🔊 Default Playback Volume</h3>
+            <label for="settingsVolume">Player volume</label>
+            <input id="settingsVolume" type="range" min="0" max="1" step="0.01" value="0.8">
+            <p id="settingsVolumeValue" aria-live="polite">80%</p>
         </div>
-
         <div class="tool-card">
-
-            <h3>Account</h3>
-
-            <p>Account management will be added.</p>
-
+            <h3>⏭️ Playback</h3>
+            <label><input id="settingsAutoplayNext" type="checkbox" checked> Automatically play the next saved track</label>
+            <p>When disabled, playback stops at the end of the current track.</p>
         </div>
-
+        <div class="tool-card">
+            <h3>💾 Your Music</h3>
+            <p id="settingsMusicCount" aria-live="polite">Checking saved tracks...</p>
+            <p>Your saved music is stored in this browser on this device.</p>
+        </div>
+        <div id="settingsStatus" role="status" aria-live="polite"></div>
     </section>
 
 `
@@ -2386,11 +2386,55 @@ const target = event.target.closest("[data-page]");
 
 if (!target) return;
 
-event.preventDefault();
+// Every page destination must load its own HTML document.
+const destination = pagePaths[target.dataset.page];
 
-navigate(target.dataset.page);
+if (destination) {
+    // Prevent the anchor's default navigation from firing a second time.
+    event.preventDefault();
+    window.location.assign(destination);
+}
 
 });
+
+/* ==========================================
+   SETTINGS PAGE
+========================================== */
+
+function initializeSettings() {
+    const volumeInput = document.getElementById("settingsVolume");
+    const volumeValue = document.getElementById("settingsVolumeValue");
+    const autoplayInput = document.getElementById("settingsAutoplayNext");
+    const musicCount = document.getElementById("settingsMusicCount");
+
+    if (volumeInput) {
+        const currentVolume = audioElement
+            ? audioElement.volume
+            : Math.max(0, Math.min(1, Number(localStorage.getItem(PLAYER_VOLUME_KEY) ?? 0.8)));
+        volumeInput.value = String(currentVolume);
+        const updateVolume = () => {
+            const volume = Math.max(0, Math.min(1, Number(volumeInput.value)));
+            if (audioElement) audioElement.volume = volume;
+            if (playerElements.volume) playerElements.volume.value = String(volume);
+            localStorage.setItem(PLAYER_VOLUME_KEY, String(volume));
+            if (volumeValue) volumeValue.textContent = Math.round(volume * 100) + "%";
+        };
+        volumeInput.addEventListener("input", updateVolume);
+        updateVolume();
+    }
+
+    if (autoplayInput) {
+        autoplayInput.checked = localStorage.getItem(AUTOPLAY_NEXT_KEY) !== "false";
+        autoplayInput.addEventListener("change", () => {
+            localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked));
+        });
+    }
+
+    if (musicCount) {
+        const count = getSavedTasks().length;
+        musicCount.textContent = count === 1 ? "1 saved track" : count + " saved tracks";
+    }
+}
 
 /* ==========================================
 PAGE INITIALIZER
@@ -2404,6 +2448,10 @@ if (page === "dashboard") {
 
 if (page === "music" || page === "library") {
     renderMusicCollection();
+}
+
+if (page === "settings") {
+    initializeSettings();
 }
 
 if (page === "create") {
@@ -2448,8 +2496,75 @@ window.addEventListener("popstate", () => {
 initializeGlobalPlayer();
 initializeGlobalSearch();
 
-// Open the page requested by the browser URL
+// Restore the last selected track after a full-page navigation.
+// Browsers stop audio during document navigation, so playback resumes paused
+// at the saved position rather than continuing without interruption.
+function restoreGlobalPlayerState() {
+    let savedState = null;
+
+    try {
+        savedState = JSON.parse(
+            sessionStorage.getItem("gtp_player_navigation_state") || "null"
+        );
+    } catch (error) {
+        savedState = null;
+    }
+
+    if (!savedState || !savedState.trackId) return;
+
+    sessionStorage.removeItem("gtp_player_navigation_state");
+    refreshPlaylist();
+
+    const track = playerPlaylist.find(
+        item => String(item.id) === String(savedState.trackId)
+    );
+
+    if (!track) return;
+
+    currentTrackId = track.id;
+    currentTrackIndex = playerPlaylist.indexOf(track);
+    updatePlayerInformation(track);
+
+    const audioURL = safeAudioURL(track.audioUrl);
+    if (!audioURL || !audioElement) return;
+
+    const restorePosition = () => {
+        const requestedTime = Number(savedState.currentTime) || 0;
+        if (Number.isFinite(audioElement.duration) && audioElement.duration > 0) {
+            audioElement.currentTime = Math.min(
+                requestedTime,
+                Math.max(0, audioElement.duration - 0.5)
+            );
+        }
+        updatePlayerProgress();
+        updatePlayButton();
+    };
+
+    audioElement.addEventListener("loadedmetadata", restorePosition, { once: true });
+    audioElement.src = audioURL;
+    audioElement.load();
+    if (audioElement.readyState >= 1) restorePosition();
+}
+
+window.addEventListener("pagehide", () => {
+    if (!audioElement || !currentTrackId) return;
+
+    try {
+        sessionStorage.setItem(
+            "gtp_player_navigation_state",
+            JSON.stringify({
+                trackId: currentTrackId,
+                currentTime: audioElement.currentTime || 0
+            })
+        );
+    } catch (error) {
+        console.warn("Unable to preserve player position:", error);
+    }
+});
+
+// Render the correct page for this independently served HTML document.
 navigate(getPageFromPath(), true);
+restoreGlobalPlayerState();
 
 updateDashboardStatistics();
 

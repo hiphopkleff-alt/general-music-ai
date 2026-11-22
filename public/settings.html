@@ -1,0 +1,369 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#070b1c"><meta name="description" content="GENERAL MUSIC AI - Create, separate and produce music with AI.">
+
+<title>GENERAL MUSIC AI V1.0 — Settings</title>
+
+<link rel="stylesheet" href="/style.css">
+
+</head><body><div class="app"><!-- ==================================
+     SIDEBAR
+================================== -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-icon">🎧</div>
+
+        <h2>
+            GENERAL<br>
+            MUSIC AI <span>V1.0</span>
+        </h2>
+
+        <small>CREATE. SEPARATE. PRODUCE.</small>
+
+    </div>
+
+    <!-- NAVIGATION -->
+
+
+   <nav>
+    <a href="/" class="active" data-page="dashboard">🏠 Dashboard</a><a href="/create" data-page="create">🎵 Create Music</a>
+
+<a href="/lyrics" data-page="lyrics">✍️ Lyrics Studio</a>
+
+<a href="/drums" data-page="drums">🥁 Drum Separation</a>
+
+<a href="/stems" data-page="stems">〰️ Stem Separation</a>
+
+<a href="/music" data-page="music">📁 My Music</a>
+
+<a href="/library" data-page="library">▶️ Library</a>
+
+<a href="/settings" data-page="settings">⚙️ Settings</a>
+
+   </nav>
+
+    <!-- PREMIUM -->
+
+    <div class="premium">
+
+        👑 PREMIUM PLAN
+
+        <p>Unlock your creativity.</p>
+
+        <button type="button">
+            Upgrade Now
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- ==================================
+     MAIN CONTENT
+================================== -->
+
+<main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <input
+            type="search"
+            id="globalSearch"
+            placeholder="Search songs, genres..."
+            aria-label="Search music"
+        >
+
+        <div class="profile">
+            🔔 &nbsp; My Account
+        </div>
+
+    </header>
+
+
+    <!-- ==================================
+         DASHBOARD HERO
+    ================================== -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <span class="tag">
+                AI MUSIC CREATION STUDIO
+            </span>
+
+            <h1>
+                Turn Your Ideas<br>
+                Into <span>Amazing Music</span>
+            </h1>
+
+            <p>
+                Generate songs, separate stems and create
+                professional tracks with the power of AI.
+            </p>
+
+            <button
+                class="primary-btn"
+                type="button"
+                data-page="create"
+            >
+                ▶ Start Creating Music
+            </button>
+
+        </div>
+
+        <div class="hero-art">
+            🎙️ 🎧
+        </div>
+
+    </section>
+
+
+    <!-- ==================================
+         DASHBOARD STATISTICS
+    ================================== -->
+
+    <section class="stats">
+
+        <div class="stat-card">
+
+            <span>🎵</span>
+
+            <p>Total Songs</p>
+
+            <h2 id="totalSongs">0</h2>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>〰️</span>
+
+            <p>Separations</p>
+
+            <h2 id="totalSeparations">0</h2>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <span>⬇️</span>
+
+            <p>Downloads</p>
+
+            <h2 id="totalDownloads">0</h2>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==================================
+         CREATION TOOLS
+    ================================== -->
+
+    <section class="tools">
+
+        <div class="tool-card" data-page="create">
+
+            <span>🎵</span>
+
+            <h3>AI Music Generator</h3>
+
+            <p>Create songs in any style.</p>
+
+        </div>
+
+
+        <div class="tool-card" data-page="lyrics">
+
+            <span>✍️</span>
+
+            <h3>Lyrics Studio</h3>
+
+            <p>Write creative lyrics with AI.</p>
+
+        </div>
+
+
+        <div class="tool-card" data-page="drums">
+
+            <span>🥁</span>
+
+            <h3>Drum Separation</h3>
+
+            <p>Extract individual drum sounds.</p>
+
+        </div>
+
+
+        <div class="tool-card" data-page="stems">
+
+            <span>🎚️</span>
+
+            <h3>Stem Separation</h3>
+
+            <p>Separate vocals, bass and instruments.</p>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==================================
+         MUSIC LIBRARY PREVIEW
+    ================================== -->
+
+    <section class="library">
+
+        <h2>🎶 Your Music Studio</h2>
+
+        <div class="empty-state">
+
+            <div>🎼</div>
+
+            <h3>Your music journey starts here</h3>
+
+            <p>
+                Your generated songs will appear here.
+            </p>
+
+            <button
+                class="primary-btn"
+                type="button"
+                data-page="create"
+            >
+                Create Your First Song
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+</div><!-- ==================================
+     GENERAL MUSIC AI GLOBAL PLAYER
+================================== --><footer class="player" id="globalPlayer"><!-- CURRENT TRACK -->
+
+<div class="now-playing">
+
+    <div class="player-cover" id="playerCover">
+        🎵
+    </div>
+
+    <div class="track-info">
+
+        <strong id="playerTitle">
+            No song playing
+        </strong>
+
+        <small id="playerArtist">
+            GENERAL MUSIC AI
+        </small>
+
+    </div>
+
+</div>
+
+
+<!-- PLAYBACK CONTROLS -->
+
+<div class="player-controls">
+
+    <button
+        type="button"
+        id="previousTrack"
+        title="Previous track"
+        aria-label="Previous track"
+    >
+        ⏮
+    </button>
+
+
+    <button
+        type="button"
+        class="play-btn"
+        id="playPauseBtn"
+        title="Play"
+        aria-label="Play or pause"
+    >
+        ▶
+    </button>
+
+
+    <button
+        type="button"
+        id="nextTrack"
+        title="Next track"
+        aria-label="Next track"
+    >
+        ⏭
+    </button>
+
+</div>
+
+
+<!-- PLAYBACK PROGRESS -->
+
+<div class="progress" id="playerProgressContainer">
+
+    <span id="currentTime">
+        00:00
+    </span>
+
+    <input
+        type="range"
+        id="playerProgress"
+        min="0"
+        max="100"
+        value="0"
+        step="0.1"
+        aria-label="Track progress"
+    >
+
+    <span id="totalDuration">
+        00:00
+    </span>
+
+</div>
+
+
+<!-- VOLUME CONTROL -->
+
+<div class="player-volume">
+
+    <span aria-hidden="true">🔊</span>
+
+    <input
+        type="range"
+        id="playerVolume"
+        min="0"
+        max="1"
+        value="0.8"
+        step="0.01"
+        aria-label="Volume control"
+    >
+
+</div>
+
+
+<!-- REAL AUDIO ENGINE -->
+
+<audio
+    id="globalAudio"
+    preload="metadata"
+></audio>
+
+</footer><!-- ==================================
+     APPLICATION JAVASCRIPT
+================================== --><script src="/app.js?v=2"></script></body></html>

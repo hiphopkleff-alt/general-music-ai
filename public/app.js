@@ -2390,6 +2390,8 @@ if (!target) return;
 const destination = pagePaths[target.dataset.page];
 
 if (destination) {
+    // Prevent the anchor's default navigation from firing a second time.
+    event.preventDefault();
     window.location.assign(destination);
 }
 

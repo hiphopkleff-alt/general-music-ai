@@ -729,6 +729,120 @@ checkMusicTask(
 
     }    
 
+   if (page === "create") {
+
+    const instrumentalForm =
+        document.getElementById("instrumentalForm");
+
+    instrumentalForm.addEventListener("submit", async event => {
+
+        event.preventDefault();
+
+        const prompt = document
+            .getElementById("instrumentalPrompt")
+            .value.trim();
+
+        const model = document
+            .getElementById("instrumentalModel")
+            .value;
+
+        const status = document.getElementById("instrumentalStatus");
+
+        if (!prompt) {
+            status.textContent = "Please describe your instrumental.";
+            return;
+        }
+
+        const button = instrumentalForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        button.disabled = true;
+        button.textContent = "⏳ PROCESSING...";
+
+        status.innerHTML = `
+            <div class="tool-card">
+                <h3>⏳ CONNECTING TO SERVER</h3>
+                <p>Please wait...</p>
+            </div>
+        `;
+
+        try {
+
+            const response = await fetch(
+                "/api/music/generate-instrumental",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ prompt, model })
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                status.innerHTML = `
+                    <div class="tool-card">
+                        <h3>🔐 INSTRUMENTAL GENERATION PAUSED</h3>
+                        <p>${escapeHTML(result.message || "Generation is unavailable.")}</p>
+                        <p>✅ No Mureka credits have been used.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const task = result.task;
+
+            if (!task || !task.id) {
+                throw new Error("No task ID returned by the server.");
+            }
+
+            const savedTasks = JSON.parse(
+                localStorage.getItem("gtp_music_tasks") || "[]"
+            );
+
+            savedTasks.unshift({
+                id: task.id,
+                title: "AI Instrumental",
+                type: "instrumental",
+                status: task.status || "preparing",
+                createdAt: new Date().toISOString()
+            });
+
+            localStorage.setItem(
+                "gtp_music_tasks",
+                JSON.stringify(savedTasks)
+            );
+
+            checkMusicTask(
+                task.id,
+                status,
+                "AI Instrumental",
+                "instrumental"
+            );
+
+        } catch (error) {
+
+            status.innerHTML = `
+                <div class="tool-card">
+                    <h3>⚠️ CONNECTION ERROR</h3>
+                    <p>${escapeHTML(error.message)}</p>
+                </div>
+            `;
+
+        } finally {
+
+            button.disabled = false;
+            button.textContent = "🎹 GENERATE INSTRUMENTAL";
+
+        }
+
+    });
+
+               }
+
    if (page === "lyrics") {
 
     const lyricsForm = document.getElementById("lyricsForm");

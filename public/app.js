@@ -37,6 +37,7 @@ const pageTitles = {
 const STORAGE_KEY = "gtp_music_tasks";
 const DOWNLOAD_KEY = "gtp_music_downloads";
 const PLAYER_VOLUME_KEY = "gtp_music_volume";
+const AUTOPLAY_NEXT_KEY = "gtp_music_autoplay_next";
 
 const MAX_AUDIO_SIZE = 7 * 1024 * 1024;
 
@@ -489,7 +490,11 @@ audioElement.addEventListener("play", updatePlayButton);
 
 audioElement.addEventListener("pause", updatePlayButton);
 
-audioElement.addEventListener("ended", playNextTrack);
+audioElement.addEventListener("ended", () => {
+    if (localStorage.getItem(AUTOPLAY_NEXT_KEY) !== "false") {
+        playNextTrack();
+    }
+});
 
 audioElement.addEventListener("error", () => {
     updatePlayButton();
@@ -966,33 +971,29 @@ library: `
 settings: `
 
     <section class="library">
-
         <h2>⚙️ SETTINGS</h2>
-
         <div class="tool-card">
-
             <h3>Application</h3>
-
             <p>GENERAL MUSIC AI V1.0</p>
-
+            <p>Manage your playback preferences below.</p>
         </div>
-
         <div class="tool-card">
-
-            <h3>Audio Preferences</h3>
-
-            <p>Music playback and audio settings.</p>
-
+            <h3>🔊 Default Playback Volume</h3>
+            <label for="settingsVolume">Player volume</label>
+            <input id="settingsVolume" type="range" min="0" max="1" step="0.01" value="0.8">
+            <p id="settingsVolumeValue" aria-live="polite">80%</p>
         </div>
-
         <div class="tool-card">
-
-            <h3>Account</h3>
-
-            <p>Account management will be added.</p>
-
+            <h3>⏭️ Playback</h3>
+            <label><input id="settingsAutoplayNext" type="checkbox" checked> Automatically play the next saved track</label>
+            <p>When disabled, playback stops at the end of the current track.</p>
         </div>
-
+        <div class="tool-card">
+            <h3>💾 Your Music</h3>
+            <p id="settingsMusicCount" aria-live="polite">Checking saved tracks...</p>
+            <p>Your saved music is stored in this browser on this device.</p>
+        </div>
+        <div id="settingsStatus" role="status" aria-live="polite"></div>
     </section>
 
 `
@@ -2398,6 +2399,45 @@ if (destination) {
 });
 
 /* ==========================================
+   SETTINGS PAGE
+========================================== */
+
+function initializeSettings() {
+    const volumeInput = document.getElementById("settingsVolume");
+    const volumeValue = document.getElementById("settingsVolumeValue");
+    const autoplayInput = document.getElementById("settingsAutoplayNext");
+    const musicCount = document.getElementById("settingsMusicCount");
+
+    if (volumeInput) {
+        const currentVolume = audioElement
+            ? audioElement.volume
+            : Math.max(0, Math.min(1, Number(localStorage.getItem(PLAYER_VOLUME_KEY) ?? 0.8)));
+        volumeInput.value = String(currentVolume);
+        const updateVolume = () => {
+            const volume = Math.max(0, Math.min(1, Number(volumeInput.value)));
+            if (audioElement) audioElement.volume = volume;
+            if (playerElements.volume) playerElements.volume.value = String(volume);
+            localStorage.setItem(PLAYER_VOLUME_KEY, String(volume));
+            if (volumeValue) volumeValue.textContent = Math.round(volume * 100) + "%";
+        };
+        volumeInput.addEventListener("input", updateVolume);
+        updateVolume();
+    }
+
+    if (autoplayInput) {
+        autoplayInput.checked = localStorage.getItem(AUTOPLAY_NEXT_KEY) !== "false";
+        autoplayInput.addEventListener("change", () => {
+            localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked));
+        });
+    }
+
+    if (musicCount) {
+        const count = getSavedTasks().length;
+        musicCount.textContent = count === 1 ? "1 saved track" : count + " saved tracks";
+    }
+}
+
+/* ==========================================
 PAGE INITIALIZER
 ========================================== */
 
@@ -2409,6 +2449,10 @@ if (page === "dashboard") {
 
 if (page === "music" || page === "library") {
     renderMusicCollection();
+}
+
+if (page === "settings") {
+    initializeSettings();
 }
 
 if (page === "create") {

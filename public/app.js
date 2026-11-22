@@ -2320,7 +2320,6 @@ function getPageFromPath() {
 /* ==========================================
 PAGE NAVIGATION
 ========================================== */
-
 function navigate(page, isBackNavigation = false) {
 
     if (!pages[page]) {
@@ -2332,16 +2331,27 @@ function navigate(page, isBackNavigation = false) {
         return;
     }
 
+    // Save the previous page
     if (!isBackNavigation && currentPage !== page) {
         pageHistory.push(currentPage);
     }
 
-    currentPage = page;
+    // Update the browser URL
+    if (!isBackNavigation) {
+        window.history.pushState(
+            { page: page },
+            "",
+            pagePaths[page]
+        );
+    }
 
+    currentPage = page;
     uploadedAudio = null;
 
+    // Display the selected page
     app.innerHTML = pages[page];
 
+    // Update active navigation link
     document.querySelectorAll("[data-page]").forEach(link => {
         link.classList.toggle(
             "active",
@@ -2356,8 +2366,8 @@ function navigate(page, isBackNavigation = false) {
     initializePage(page);
 
     updateDashboardStatistics();
-
 }
+
 
 /* ==========================================
 NAVIGATION CLICK HANDLER

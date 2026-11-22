@@ -562,3 +562,210 @@ button {
         display: none;
     }
 }
+/* ==========================================
+   GENERAL MUSIC AI V1.0
+   CLEAN GENERATOR LAYOUT
+========================================== */
+
+.generator-page {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.generator-panel {
+    width: 100%;
+    padding: 24px;
+    border: 1px solid rgba(25,217,255,0.28);
+    border-radius: 16px;
+    background: linear-gradient(
+        145deg,
+        #142344,
+        #0b1730
+    );
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.generator-panel h2 {
+    margin-bottom: 22px;
+    color: var(--cyan);
+    font-size: 21px;
+    letter-spacing: 1px;
+}
+
+.generator-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.generator-panel label {
+    display: block;
+    color: #e8f2ff;
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.generator-panel input,
+.generator-panel textarea,
+.generator-panel select,
+.lyrics-page textarea,
+.lyrics-page select {
+    width: 100%;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid rgba(100,150,255,0.3);
+    border-radius: 9px;
+    background: #09152d;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.generator-panel input:focus,
+.generator-panel textarea:focus,
+.generator-panel select:focus,
+.lyrics-page textarea:focus,
+.lyrics-page select:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(25,217,255,0.12);
+}
+
+.generator-panel textarea,
+.lyrics-page textarea {
+    min-height: 105px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.generator-panel select,
+.lyrics-page select {
+    cursor: pointer;
+}
+
+.generator-panel .primary-btn {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.form-row > div {
+    min-width: 0;
+}
+
+.form-row select {
+    width: 100%;
+}
+
+
+/* ==========================================
+   LYRICS STUDIO
+========================================== */
+
+.lyrics-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.lyrics-page > h2 {
+    color: var(--cyan);
+    margin-bottom: 2px;
+}
+
+.lyrics-editor-card {
+    cursor: default !important;
+    transition: none !important;
+    transform: none !important;
+    border-color: rgba(25,217,255,0.28) !important;
+    box-shadow: none !important;
+}
+
+.lyrics-editor-card:hover,
+.lyrics-editor-card:active {
+    transform: none !important;
+    border-color: rgba(25,217,255,0.28) !important;
+    box-shadow: none !important;
+}
+
+.lyrics-editor-card textarea {
+    display: block;
+    min-height: 280px;
+    margin-top: 15px;
+    resize: vertical;
+    line-height: 1.7;
+}
+
+.lyrics-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.lyrics-action-btn {
+    width: 100%;
+    padding: 13px 9px;
+    font-size: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lyrics-action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.lyrics-action-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 15px rgba(25,217,255,0.4);
+}
+
+.lyrics-action-btn:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+}
+
+
+/* ==========================================
+   MOBILE LAYOUT
+========================================== */
+
+@media(max-width:650px) {
+
+    .generator-page {
+        gap: 18px;
+    }
+
+    .generator-panel {
+        padding: 17px;
+    }
+
+    .generator-panel h2 {
+        font-size: 19px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .lyrics-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .lyrics-action-btn {
+        padding: 14px;
+        font-size: 13px;
+    }
+
+    .lyrics-editor-card textarea {
+        min-height: 250px;
+    }
+
+    }

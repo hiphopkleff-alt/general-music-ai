@@ -25,7 +25,7 @@ test("all eight page files exist and load the shared app assets", () => {
         const html = read(path.join("public", file));
         assert.match(html, /<main\b[^>]*class="main"/i, file + " has main app container");
         assert.match(html, /id="globalAudio"/, file + " has global audio player");
-        assert.match(html, /src="\/app\.js\?v=3"/, file + " loads current app script");
+        assert.match(html, /src="\/app\.js\?v=4"/, file + " loads current app script");
         assert.match(html, new RegExp('class="active" data-page="' + slug + '"'), file + " highlights correct navigation item");
     }
 });

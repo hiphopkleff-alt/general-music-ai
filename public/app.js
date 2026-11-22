@@ -2386,8 +2386,12 @@ const target = event.target.closest("[data-page]");
 
 if (!target) return;
 
-event.preventDefault();
+// Real navigation links load their own HTML document from the server.
+if (target.tagName === "A" && target.getAttribute("href")) {
+    return;
+}
 
+// Keep dashboard tool cards and other non-link controls working.
 navigate(target.dataset.page);
 
 });
@@ -2448,8 +2452,76 @@ window.addEventListener("popstate", () => {
 initializeGlobalPlayer();
 initializeGlobalSearch();
 
-// Open the page requested by the browser URL
+// Restore the last selected track after a full-page navigation.
+// Browsers stop audio during document navigation, so playback resumes paused
+// at the saved position rather than continuing without interruption.
+function restoreGlobalPlayerState() {
+    let savedState = null;
+
+    try {
+        savedState = JSON.parse(
+            sessionStorage.getItem("gtp_player_navigation_state") || "null"
+        );
+    } catch (error) {
+        savedState = null;
+    }
+
+    if (!savedState || !savedState.trackId) return;
+
+    sessionStorage.removeItem("gtp_player_navigation_state");
+    refreshPlaylist();
+
+    const track = playerPlaylist.find(
+        item => String(item.id) === String(savedState.trackId)
+    );
+
+    if (!track) return;
+
+    currentTrackId = track.id;
+    currentTrackIndex = playerPlaylist.indexOf(track);
+    updatePlayerInformation(track);
+
+    const audioURL = safeAudioURL(track.audioUrl);
+    if (!audioURL || !audioElement) return;
+
+    audioElement.src = audioURL;
+    audioElement.load();
+
+    const restorePosition = () => {
+        const requestedTime = Number(savedState.currentTime) || 0;
+        if (Number.isFinite(audioElement.duration) && audioElement.duration > 0) {
+            audioElement.currentTime = Math.min(
+                requestedTime,
+                Math.max(0, audioElement.duration - 0.5)
+            );
+        }
+        updatePlayerProgress();
+        updatePlayButton();
+    };
+
+    audioElement.addEventListener("loadedmetadata", restorePosition, { once: true });
+    if (audioElement.readyState >= 1) restorePosition();
+}
+
+window.addEventListener("pagehide", () => {
+    if (!audioElement || !currentTrackId) return;
+
+    try {
+        sessionStorage.setItem(
+            "gtp_player_navigation_state",
+            JSON.stringify({
+                trackId: currentTrackId,
+                currentTime: audioElement.currentTime || 0
+            })
+        );
+    } catch (error) {
+        console.warn("Unable to preserve player position:", error);
+    }
+});
+
+// Render the correct page for this independently served HTML document.
 navigate(getPageFromPath(), true);
+restoreGlobalPlayerState();
 
 updateDashboardStatistics();
 

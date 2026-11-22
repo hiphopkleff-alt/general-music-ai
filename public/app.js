@@ -690,9 +690,11 @@ checkMusicTask(
         });
 
     }    
-    if (page === "lyrics") {
+
+   if (page === "lyrics") {
 
     const lyricsForm = document.getElementById("lyricsForm");
+    const generateButton = lyricsForm.querySelector('button[type="submit"]');
 
     lyricsForm.addEventListener("submit", async event => {
 
@@ -700,7 +702,6 @@ checkMusicTask(
 
         const theme = document.getElementById("lyricsTheme").value.trim();
         const genre = document.getElementById("lyricsGenre").value;
-
         const resultBox = document.getElementById("lyricsResult");
 
         if (!theme) {
@@ -713,9 +714,12 @@ checkMusicTask(
             return;
         }
 
+        generateButton.disabled = true;
+        generateButton.textContent = "⏳ PROCESSING...";
+
         resultBox.innerHTML = `
             <div class="tool-card">
-                <h3>⏳ Preparing Lyrics Request</h3>
+                <h3>⏳ PREPARING LYRICS</h3>
                 <p>Connecting to GENERAL MUSIC AI server...</p>
             </div>
         `;
@@ -752,6 +756,10 @@ checkMusicTask(
 
             const lyrics = data.lyrics;
 
+            if (!lyrics) {
+                throw new Error("The server did not return any lyrics.");
+            }
+
             resultBox.innerHTML = `
                 <div class="tool-card">
                     <h3>🎵 YOUR GENERATED LYRICS</h3>
@@ -773,6 +781,11 @@ checkMusicTask(
                     <p>${escapeHTML(error.message)}</p>
                 </div>
             `;
+
+        } finally {
+
+            generateButton.disabled = false;
+            generateButton.textContent = "🎵 GENERATE LYRICS";
 
         }
 

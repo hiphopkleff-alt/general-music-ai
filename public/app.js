@@ -857,13 +857,41 @@ checkMusicTask(
                     );
                 }
 
-                status.textContent =
-                    "Stem separation request accepted.";
+                const stemData = result.result;
 
-                console.log(
-                    "Stem separation result:",
-                    result
-                );
+if (!stemData || !stemData.zip_url) {
+    throw new Error(
+        "Separation completed, but the download link was not returned."
+    );
+}
+
+status.innerHTML = "";
+
+const message = document.createElement("p");
+
+message.textContent =
+    "✅ Your separated audio tracks are ready!";
+
+const downloadLink = document.createElement("a");
+
+downloadLink.href = stemData.zip_url;
+downloadLink.target = "_blank";
+downloadLink.rel = "noopener noreferrer";
+downloadLink.textContent = "⬇️ DOWNLOAD SEPARATED STEMS";
+
+downloadLink.style.display = "inline-block";
+downloadLink.style.marginTop = "15px";
+downloadLink.style.padding = "12px 20px";
+downloadLink.style.borderRadius = "10px";
+downloadLink.style.background = "#35ffad";
+downloadLink.style.color = "#071426";
+downloadLink.style.fontWeight = "bold";
+downloadLink.style.textDecoration = "none";
+
+status.appendChild(message);
+status.appendChild(downloadLink);
+
+console.log("Stem separation result:", stemData);
 
             } catch (error) {
 

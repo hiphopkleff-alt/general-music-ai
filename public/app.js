@@ -998,7 +998,7 @@ checkMusicTask(
                 </div>
             `;
 
-        } finally {
+                } finally {
 
             generateButton.disabled = false;
             generateButton.textContent = "🎵 GENERATE LYRICS";
@@ -1007,6 +1007,75 @@ checkMusicTask(
 
     });
 
+    // LYRICS EDITOR CONTROLS
+
+    const lyricsEditor = document.getElementById("lyricsEditor");
+
+    const editorStatus = document.getElementById("lyricsEditorStatus");
+
+    document.getElementById("copyLyrics").addEventListener("click", async () => {
+
+        const text = lyricsEditor.value.trim();
+
+        if (!text) {
+            editorStatus.textContent = "Please enter some lyrics first.";
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(text);
+            editorStatus.textContent = "✅ Lyrics copied successfully!";
+        } catch (error) {
+            editorStatus.textContent = "⚠️ Unable to copy. Please select and copy manually.";
+        }
+
+    });
+
+    document.getElementById("downloadLyrics").addEventListener("click", () => {
+
+        const text = lyricsEditor.value.trim();
+
+        if (!text) {
+            editorStatus.textContent = "Please enter some lyrics first.";
+            return;
+        }
+
+        const blob = new Blob([text], {
+            type: "text/plain;charset=utf-8"
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "GENERAL-MUSIC-AI-LYRICS.txt";
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+        editorStatus.textContent = "✅ Lyrics downloaded!";
+
+    });
+
+    document.getElementById("clearLyrics").addEventListener("click", () => {
+
+        if (!lyricsEditor.value.trim()) {
+            editorStatus.textContent = "The editor is already empty.";
+            return;
+        }
+
+        if (!confirm("Are you sure you want to clear your lyrics?")) {
+            return;
+        }
+
+        lyricsEditor.value = "";
+        editorStatus.textContent = "✅ Lyrics cleared.";
+
+    });
+
+}
 }
 
     if (page === "drums") {

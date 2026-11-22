@@ -165,14 +165,11 @@ const pages = {
 
     create: `
 
-        <section class="library">
+    <section class="library generator-page">
 
-            <h2>🎵 AI MUSIC GENERATOR</h2>
+        <div class="generator-panel">
 
-            <p class="description">
-                Turn your imagination into music.
-            </p>
-
+            <h2>🎵 MUSIC</h2>
 
             <form id="musicForm">
 
@@ -186,7 +183,6 @@ const pages = {
                     required
                 >
 
-
                 <label>Describe Your Music</label>
 
                 <textarea
@@ -196,7 +192,6 @@ const pages = {
                     required
                 ></textarea>
 
-
                 <label>Write or Paste Your Lyrics</label>
 
                 <textarea
@@ -205,68 +200,61 @@ const pages = {
                     required
                 ></textarea>
 
+                <div class="form-row">
 
-                <label>Music Genre</label>
+                    <div>
+                        <label>Music Genre</label>
 
-                <select id="genre">
+                        <select id="genre">
+                            <option>Afrobeats</option>
+                            <option>Gospel</option>
+                            <option>Amapiano</option>
+                            <option>Hip-Hop</option>
+                            <option>R&B</option>
+                            <option>Reggae</option>
+                            <option>Pop</option>
+                            <option>Highlife</option>
+                            <option>Jazz</option>
+                            <option>Electronic</option>
+                        </select>
+                    </div>
 
-                    <option>Afrobeats</option>
-                    <option>Gospel</option>
-                    <option>Amapiano</option>
-                    <option>Hip-Hop</option>
-                    <option>R&B</option>
-                    <option>Reggae</option>
-                    <option>Pop</option>
-                    <option>Highlife</option>
-                    <option>Jazz</option>
-                    <option>Electronic</option>
+                    <div>
+                        <label>Vocal Style</label>
 
-                </select>
+                        <select id="vocal">
+                            <option value="male">Male Vocals</option>
+                            <option value="female">Female Vocals</option>
+                        </select>
+                    </div>
 
-
-                <label>Vocal Style</label>
-
-                <select id="vocal">
-
-                    <option value="male">Male Vocals</option>
-                    <option value="female">Female Vocals</option>
-
-                </select>
-
+                </div>
 
                 <label>AI Music Model</label>
 
                 <select id="musicModel">
-
                     <option value="auto">Automatic</option>
                     <option value="mureka-7.6">Mureka 7.6</option>
                     <option value="mureka-o2">Mureka O2</option>
                     <option value="mureka-8">Mureka 8</option>
                     <option value="mureka-9">Mureka 9</option>
                     <option value="mureka-9.5">Mureka 9.5</option>
-
                 </select>
 
-
                 <button class="primary-btn" type="submit">
-                    ✨ GENERATE AI SONG
+                    ✨ GENERATE MUSIC
                 </button>
 
             </form>
 
-
             <div id="generationStatus"></div>
 
+        </div>
 
-            <hr style="margin:35px 0; opacity:0.2;">
 
+        <div class="generator-panel">
 
-            <h2>🎹 AI INSTRUMENTAL GENERATOR</h2>
-
-            <p class="description">
-                Create beats and instrumentals without vocals.
-            </p>
-
+            <h2>🎹 INSTRUMENTAL</h2>
 
             <form id="instrumentalForm">
 
@@ -275,23 +263,19 @@ const pages = {
                 <textarea
                     id="instrumentalPrompt"
                     maxlength="1024"
-                    placeholder="Example: A powerful Afrobeats instrumental with deep bass, energetic drums, catchy melodies and African percussion..."
+                    placeholder="Describe your beat, instruments and sound..."
                     required
                 ></textarea>
-
 
                 <label>AI Music Model</label>
 
                 <select id="instrumentalModel">
-
                     <option value="auto">Automatic</option>
                     <option value="mureka-7.6">Mureka 7.6</option>
                     <option value="mureka-8">Mureka 8</option>
                     <option value="mureka-9">Mureka 9</option>
                     <option value="mureka-9.5">Mureka 9.5</option>
-
                 </select>
-
 
                 <button class="primary-btn" type="submit">
                     🎹 GENERATE INSTRUMENTAL
@@ -299,10 +283,11 @@ const pages = {
 
             </form>
 
-
             <div id="instrumentalStatus"></div>
 
-        </section>
+        </div>
+
+    </section>
 
     `,
 

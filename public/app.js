@@ -159,6 +159,39 @@ const pages = {
             </form>
 
             <div id="lyricsResult"></div>
+
+<div class="tool-card" style="margin-top:20px;">
+
+    <h3>📝 LYRICS EDITOR</h3>
+
+    <p>Edit, copy or download your lyrics.</p>
+
+    <textarea
+        id="lyricsEditor"
+        rows="14"
+        placeholder="Write or paste your lyrics here..."
+        style="width:100%; min-height:250px; resize:vertical;"
+    ></textarea>
+
+    <div class="tools" style="margin-top:15px;">
+
+        <button class="primary-btn" id="copyLyrics" type="button">
+            📋 COPY LYRICS
+        </button>
+
+        <button class="primary-btn" id="downloadLyrics" type="button">
+            ⬇️ DOWNLOAD LYRICS
+        </button>
+
+        <button class="primary-btn" id="clearLyrics" type="button">
+            🗑️ CLEAR LYRICS
+        </button>
+
+    </div>
+
+    <div id="lyricsEditorStatus"></div>
+
+</div>
         </section>
     `,
 

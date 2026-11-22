@@ -972,11 +972,18 @@ checkMusicTask(
 
             const lyrics = data.lyrics;
 
-            if (!lyrics) {
-                throw new Error("The server did not return any lyrics.");
-            }
+if (!lyrics) {
+    throw new Error("The server did not return any lyrics.");
+}
 
-            resultBox.innerHTML = `
+const lyricsText = typeof lyrics === "string"
+    ? lyrics
+    : JSON.stringify(lyrics, null, 2);
+
+// Automatically place generated lyrics in the editor.
+document.getElementById("lyricsEditor").value = lyricsText;
+
+resultBox.innerHTML = `
                 <div class="tool-card">
                     <h3>🎵 YOUR GENERATED LYRICS</h3>
                     <div style="white-space:pre-wrap; line-height:1.8;">

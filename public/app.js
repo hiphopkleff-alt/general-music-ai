@@ -2433,10 +2433,10 @@ window.addEventListener("popstate", () => {
 });
 
 initializeGlobalPlayer();
-
 initializeGlobalSearch();
 
-navigate("dashboard");
+// Open the page requested by the browser URL
+navigate(getPageFromPath(), true);
 
 updateDashboardStatistics();
 

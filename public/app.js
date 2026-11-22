@@ -2390,10 +2390,16 @@ document.addEventListener("click", event => {
 
     if (!pages[destination]) return;
 
-    // Keep navigation inside the app: render the selected feature page
-    // in the existing shell instead of loading another dashboard document.
+    // Real links must load their matching HTML document. Do not cancel
+    // the browser's normal navigation for sidebar and other anchor links.
+    if (target.tagName === "A" && target.hasAttribute("href")) {
+        return;
+    }
+
+    // Dashboard feature cards are clickable containers rather than links.
+    // Send them to the same independent page URL as the sidebar.
     event.preventDefault();
-    navigate(destination);
+    window.location.assign(pagePaths[destination]);
 });
 
 /* ==========================================

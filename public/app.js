@@ -21,6 +21,19 @@ const originalDashboard = app.innerHTML;
 let currentPage = "dashboard";
 let uploadedAudio = null;
 
+const pageHistory = [];
+
+const pageTitles = {
+    dashboard: "DASHBOARD",
+    create: "CREATE MUSIC",
+    lyrics: "LYRICS STUDIO",
+    drums: "DRUM SEPARATION",
+    stems: "STEM SEPARATION",
+    music: "MY MUSIC",
+    library: "MUSIC LIBRARY",
+    settings: "SETTINGS"
+};
+
 const STORAGE_KEY = "gtp_music_tasks";
 const DOWNLOAD_KEY = "gtp_music_downloads";
 const PLAYER_VOLUME_KEY = "gtp_music_volume";

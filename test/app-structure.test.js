@@ -68,7 +68,9 @@ test("drum separation is not falsely presented as connected", () => {
     assert.match(app, /DRUM SEPARATION NOT YET CONNECTED/);
 });
 
-test("settings persist audio volume and autoplay preference", () => {
+test("player defaults to a usable volume and settings persist preferences", () => {
+    assert.ok(app.includes('const storedVolume = localStorage.getItem(PLAYER_VOLUME_KEY);'));
+    assert.ok(app.includes('const savedVolume = storedVolume === null ? 0.8 : Number(storedVolume);'));
     assert.ok(app.includes('localStorage.setItem(PLAYER_VOLUME_KEY, String(volume))'));
     assert.ok(app.includes('localStorage.setItem(AUTOPLAY_NEXT_KEY, String(autoplayInput.checked))'));
 });

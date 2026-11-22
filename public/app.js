@@ -367,7 +367,7 @@ function handleAudioUpload(inputId, statusId) {
    CHECK MUSIC GENERATION STATUS
 ================================== */
 
-async function checkMusicTask(taskId, statusElement, title) {
+async function checkMusicTask(taskId, statusElement, title, type = "song") {
 
     const terminalStatuses = [
         "succeeded",

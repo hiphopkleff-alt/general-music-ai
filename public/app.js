@@ -386,7 +386,7 @@ async function checkMusicTask(taskId, statusElement, title, type = "song") {
         try {
 
             const response = await fetch(
-                `/api/music/task/song/${encodeURIComponent(taskId)}`
+                `/api/music/task/${type}/${encodeURIComponent(taskId)}`
             );
 
             const result = await response.json();

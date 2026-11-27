@@ -1323,7 +1323,7 @@ function renderMusicCollection() {
                 <div class="collection-playlist-list">
                     ${playlists.length ? playlists.map(item => `
                         <div class="collection-playlist-item">
-                            <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${escapeHTML(item.name)} <small>${item.trackIds.length} tracks</small></button>
+                            <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${item.coverImage ? '<span class="playlist-chip-cover" style="background-image:url(&quot;' + escapeHTML(item.coverImage) + '&quot; )"></span>' : '<span class="playlist-chip-cover playlist-chip-placeholder">♫</span>'}<span>${escapeHTML(item.name)} <small>${item.trackIds.length} tracks</small></span></button>
                             <button type="button" class="collection-action-btn" data-play-playlist="${escapeHTML(item.id)}">▶ PLAY</button>
                             <button type="button" class="collection-action-btn" data-shuffle-playlist="${escapeHTML(item.id)}">🔀 SHUFFLE</button>
                             <button type="button" class="collection-action-btn" data-rename-playlist="${escapeHTML(item.id)}">✏️ RENAME</button>
@@ -1352,7 +1352,7 @@ function renderMusicCollection() {
     if (collectionMode === "playlist") {
         const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
         if (!playlist) { collectionMode = "playlists"; activePlaylistId = null; renderMusicCollection(); return; }
-        playlistHeaderMarkup = '<section class="playlist-detail-header"><div class="playlist-detail-copy"><span class="album-kicker">PLAYLIST COLLECTION</span><h2>' + escapeHTML(playlist.name) + '</h2><p>' + playlist.trackIds.length + ' tracks · Your personal mix</p><div class="album-playback-actions"><button type="button" class="primary-btn" data-play-playlist="' + escapeHTML(playlist.id) + '">▶ PLAY PLAYLIST</button><button type="button" class="collection-action-btn" data-shuffle-playlist="' + escapeHTML(playlist.id) + '">🔀 SHUFFLE</button><button type="button" class="collection-action-btn" data-playlist-back>← ALL PLAYLISTS</button></div></div></section>';
+        playlistHeaderMarkup = '<section class="playlist-detail-header">' + (playlist.coverImage ? '<div class="playlist-detail-cover" style="background-image:url(&quot;' + escapeHTML(playlist.coverImage) + '&quot;)"></div>' : '<div class="playlist-detail-cover playlist-chip-placeholder">♫</div>') + '<div class="playlist-detail-copy"><span class="album-kicker">PLAYLIST COLLECTION</span><h2>' + escapeHTML(playlist.name) + '</h2><p>' + playlist.trackIds.length + ' tracks · Your personal mix</p><div class="album-playback-actions"><button type="button" class="primary-btn" data-play-playlist="' + escapeHTML(playlist.id) + '">▶ PLAY PLAYLIST</button><button type="button" class="collection-action-btn" data-shuffle-playlist="' + escapeHTML(playlist.id) + '">🔀 SHUFFLE</button><label class="collection-action-btn playlist-cover-label" for="playlistCover_' + escapeHTML(playlist.id) + '">🖼️ CHANGE COVER</label><input class="music-cover-input" id="playlistCover_' + escapeHTML(playlist.id) + '" type="file" accept="image/jpeg,image/png,image/webp" data-playlist-cover="' + escapeHTML(playlist.id) + '"><button type="button" class="collection-action-btn" data-playlist-back>← ALL PLAYLISTS</button></div></div></section>';
     }
 
     let albumHeaderMarkup = "";
@@ -1444,7 +1444,7 @@ function renderMusicCollection() {
                             <input class="music-cover-input" id="coverUpload_${id}" type="file" accept="image/jpeg,image/png,image/webp" data-cover-upload="${id}">
                             <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ Favorited" : "♡ Add to favorites"}</button>
                             <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ Add to playlist</button>
-                            ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">Remove from playlist</button>' : ""}
+                            ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">Remove from playlist</button><button type="button" class="collection-action-btn" data-playlist-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-playlist-move-down="' + id + '">↓ Move down</button>' : ""}
                             <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ Add to album</button>
                             ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-remove-from-album="' + id + '">Remove from album</button><button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ Move down</button>' : ""}
                             <button type="button" class="collection-action-btn" data-delete-music="${id}">Delete track</button>
@@ -1548,6 +1548,25 @@ document.addEventListener("change", async event => {
     } catch (error) { alert(error.message || "Unable to save album artwork."); input.disabled = false; }
 });
 
+/* PLAYLIST COVER ARTWORK */
+document.addEventListener("change", async event => {
+    const input = event.target.closest("[data-playlist-cover]");
+    if (!input || !input.files || !input.files[0]) return;
+    input.disabled = true;
+    try {
+        const coverImage = await compressCoverImage(input.files[0]);
+        const playlists = getCustomPlaylists();
+        const playlist = playlists.find(item => String(item.id) === String(input.dataset.playlistCover));
+        if (!playlist) throw new Error("Playlist not found.");
+        playlist.coverImage = coverImage;
+        saveCustomPlaylists(playlists);
+        renderMusicCollection();
+    } catch (error) {
+        alert(error.message || "Unable to save playlist artwork.");
+        input.disabled = false;
+    }
+});
+
 /* TRACK COVER ARTWORK */
 async function compressCoverImage(file) {
     if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Choose a JPG, PNG or WebP image.");
@@ -1628,6 +1647,9 @@ if (playButton) {
     if (collectionMode === "album" && activeAlbumId) {
         const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
         playbackQueueIds = album ? [...album.trackIds] : null;
+    } else if (collectionMode === "playlist" && activePlaylistId) {
+        const playlist = getCustomPlaylists().find(item => String(item.id) === String(activePlaylistId));
+        playbackQueueIds = playlist ? [...playlist.trackIds] : null;
     } else {
         playbackQueueIds = null;
     }
@@ -1808,6 +1830,27 @@ if (moveAlbumUp || moveAlbumDown) {
         if (index >= 0 && target >= 0 && target < album.trackIds.length) {
             [album.trackIds[index], album.trackIds[target]] = [album.trackIds[target], album.trackIds[index]];
             saveMusicAlbums(albums); renderMusicCollection();
+        }
+    }
+    return;
+}
+
+const movePlaylistUp = event.target.closest("[data-playlist-move-up]");
+const movePlaylistDown = event.target.closest("[data-playlist-move-down]");
+if (movePlaylistUp || movePlaylistDown) {
+    const button = movePlaylistUp || movePlaylistDown;
+    const playlists = getCustomPlaylists();
+    const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
+    if (playlist) {
+        playlist.trackIds = Array.isArray(playlist.trackIds) ? playlist.trackIds : [];
+        const trackId = button.dataset.playlistMoveUp || button.dataset.playlistMoveDown;
+        const index = playlist.trackIds.findIndex(id => String(id) === String(trackId));
+        const target = index + (movePlaylistUp ? -1 : 1);
+        if (index >= 0 && target >= 0 && target < playlist.trackIds.length) {
+            [playlist.trackIds[index], playlist.trackIds[target]] = [playlist.trackIds[target], playlist.trackIds[index]];
+            saveCustomPlaylists(playlists);
+            playbackQueueIds = [...playlist.trackIds];
+            renderMusicCollection();
         }
     }
     return;

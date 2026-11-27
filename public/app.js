@@ -216,6 +216,7 @@ document.querySelectorAll("[data-pause-music]").forEach(button => {
     button.title = playing ? "Pause" : "Play";
     button.setAttribute("aria-label", playing ? "Pause" : "Play");
 });
+document.querySelectorAll("[data-full-toggle]").forEach(button => { button.textContent = playing ? "Ⅱ" : "▶"; button.setAttribute("aria-label", playing ? "Pause" : "Play"); });
 
 }
 
@@ -371,6 +372,7 @@ if (!audioURL) {
 currentTrackId = track.id;
 currentTrackIndex = index;
 
+if (currentPage === "nowplaying") renderNowPlayingPage();
 updatePlayerInformation(track);
 detectTrackDuration(track.id, audioURL);
 

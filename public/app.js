@@ -234,6 +234,16 @@ if (playerElements.progress) {
         duration > 0 ? (current / duration) * 100 : 0;
 }
 
+document.querySelectorAll("[data-inline-progress]").forEach(element => {
+    element.value = duration > 0 ? (current / duration) * 100 : 0;
+});
+document.querySelectorAll("[data-inline-current]").forEach(element => {
+    element.textContent = formatTime(current);
+});
+document.querySelectorAll("[data-inline-duration]").forEach(element => {
+    element.textContent = formatTime(duration);
+});
+
 }
 
 function updatePlayerInformation(track) {
@@ -1427,6 +1437,19 @@ function renderMusicCollection() {
                     <span class="compact-track-subtitle">${escapeHTML(song.artistName || "Unknown artist")} · ${escapeHTML(song.genre || song.musicStyle || (song.type === "instrumental" ? "Instrumental" : "Music"))}</span>
                 </div>
                 ${controls}
+                ${isExpandedPlayer ? `
+                    <section class="inline-now-playing" aria-label="Now playing controls">
+                        <div class="inline-now-playing-heading"><span>NOW PLAYING</span><span class="inline-playing-indicator">● LIVE</span></div>
+                        <div class="inline-now-playing-track">${coverMarkup}<div><strong>${title}</strong><small>${escapeHTML(song.artistName || "Unknown artist")}</small></div></div>
+                        <input class="inline-player-progress" type="range" min="0" max="100" step="0.1" value="${audioElement && audioElement.duration > 0 ? (audioElement.currentTime / audioElement.duration) * 100 : 0}" data-inline-progress aria-label="Seek through track">
+                        <div class="inline-player-times"><span data-inline-current>${formatTime(audioElement ? audioElement.currentTime : 0)}</span><span data-inline-duration>${formatTime(audioElement ? audioElement.duration : 0)}</span></div>
+                        <div class="inline-player-main-controls">
+                            <button type="button" class="track-icon-btn" data-prev-music="${id}" title="Previous" aria-label="Previous">⏮</button>
+                            <button type="button" class="inline-player-play" data-pause-music="${id}" title="${audioElement && !audioElement.paused ? "Pause" : "Play"}" aria-label="${audioElement && !audioElement.paused ? "Pause" : "Play"}">${audioElement && !audioElement.paused ? "Ⅱ" : "▶"}</button>
+                            <button type="button" class="track-icon-btn" data-next-music="${id}" title="Next" aria-label="Next">⏭</button>
+                            ${downloadControl}
+                        </div>
+                    </section>` : ""}
                 <details class="compact-track-more">
                     <summary title="Track options" aria-label="Track options">•••</summary>
                     <div class="compact-track-options">
@@ -1620,6 +1643,12 @@ searchInput.addEventListener("input", () => {
 /* ==========================================
 PLAY / DELETE / DOWNLOAD EVENTS
 ========================================== */
+
+document.addEventListener("input", event => {
+    const seek = event.target.closest("[data-inline-progress]");
+    if (!seek || !audioElement || !Number.isFinite(audioElement.duration) || audioElement.duration <= 0) return;
+    audioElement.currentTime = (Number(seek.value) / 100) * audioElement.duration;
+});
 
 document.addEventListener("click", async event => {
 

@@ -94,10 +94,11 @@ const existingIndex = tasks.findIndex(
 if (existingIndex >= 0) {
     tasks[existingIndex] = {
         ...tasks[existingIndex],
-        ...task
+        ...task,
+        createdAt: tasks[existingIndex].createdAt || task.createdAt || new Date().toISOString()
     };
 } else {
-    tasks.unshift(task);
+    tasks.unshift({ ...task, createdAt: task.createdAt || new Date().toISOString() });
 }
 
 saveTasks(tasks);
@@ -243,10 +244,9 @@ if (playerElements.title) {
 }
 
 if (playerElements.artist) {
-    playerElements.artist.textContent =
-        track.type === "instrumental"
-            ? "GENERAL MUSIC AI · INSTRUMENTAL"
-            : "GENERAL MUSIC AI · AI SONG";
+    playerElements.artist.textContent = track.artistName || (track.type === "instrumental"
+        ? "GENERAL MUSIC AI · INSTRUMENTAL"
+        : "GENERAL MUSIC AI · AI SONG");
 }
 
 if (playerElements.cover) {
@@ -311,6 +311,7 @@ currentTrackId = track.id;
 currentTrackIndex = index;
 
 updatePlayerInformation(track);
+detectTrackDuration(track.id, audioURL);
 
 if (audioElement.src !== audioURL) {
     audioElement.pause();
@@ -1215,9 +1216,17 @@ function renderMusicCollection() {
     }
 
     const filteredTasks = visibleTasks.filter(song => {
-        const title = String(song.title || "").toLowerCase();
-        const type = String(song.type || "").toLowerCase();
-        return title.includes(searchTerm) || type.includes(searchTerm);
+        const searchable = [song.title, song.type, song.artistName, song.albumName, song.genre, song.musicStyle].join(" ").toLowerCase();
+        return searchable.includes(searchTerm);
+    });
+    const sortInput = document.getElementById("musicSort");
+    const sortMode = sortInput ? sortInput.value : "newest";
+    const sortedTasks = [...filteredTasks].sort((a, b) => {
+        const av = String(a[sortMode === "newest" || sortMode === "oldest" ? "createdAt" : sortMode] || "").toLowerCase();
+        const bv = String(b[sortMode === "newest" || sortMode === "oldest" ? "createdAt" : sortMode] || "").toLowerCase();
+        if (sortMode === "newest") return (Date.parse(bv) || 0) - (Date.parse(av) || 0);
+        if (sortMode === "oldest") return (Date.parse(av) || 0) - (Date.parse(bv) || 0);
+        return av.localeCompare(bv);
     });
 
     const playlistOptions = playlists.map(item =>
@@ -1258,8 +1267,10 @@ function renderMusicCollection() {
         return;
     }
 
-    if (filteredTasks.length === 0) {
-        collection.innerHTML = toolbar + `
+    const sortToolbar = `<div class="music-sort-row"><label for="musicSort">SORT TRACKS</label><select id="musicSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title</option><option value="artistName">Artist</option><option value="albumName">Album</option><option value="genre">Genre</option></select></div>`;
+
+    if (sortedTasks.length === 0) {
+        collection.innerHTML = toolbar + sortToolbar + `
             <div class="empty-state">
                 <div>🎼</div>
                 <h3>${savedTasks.length ? "No music found in this view" : "Your music collection is empty"}</h3>
@@ -1268,7 +1279,7 @@ function renderMusicCollection() {
         return;
     }
 
-    const cards = filteredTasks.map(song => {
+    const cards = sortedTasks.map(song => {
         const title = escapeHTML(song.title || "Untitled Song");
         const id = escapeHTML(song.id);
         const status = escapeHTML(song.status || "preparing");
@@ -1291,6 +1302,20 @@ function renderMusicCollection() {
                 <h3>🎵 ${title}</h3>
                 <p class="music-track-type">${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
                 <p>Status: ${status}</p>
+                <div class="music-track-details">
+                    <p><strong>Artist:</strong> ${escapeHTML(song.artistName || "Not set")}</p>
+                    <p><strong>Album:</strong> ${escapeHTML(song.albumName || "Single")}</p>
+                    <p><strong>Genre:</strong> ${escapeHTML(song.genre || song.musicStyle || "Not set")}</p>
+                    <p><strong>Duration:</strong> ${song.durationSeconds ? formatTime(song.durationSeconds) : "Not detected yet"}</p>
+                    <p><strong>Created:</strong> ${song.createdAt ? escapeHTML(new Date(song.createdAt).toLocaleDateString()) : "Date unavailable"}</p>
+                </div>
+                <details class="track-metadata-editor">
+                    <summary>✏️ EDIT TRACK DETAILS</summary>
+                    <label>Artist name<input type="text" maxlength="80" data-meta-field="artistName" value="${escapeHTML(song.artistName || "")}" placeholder="Artist / producer name"></label>
+                    <label>Album name<input type="text" maxlength="100" data-meta-field="albumName" value="${escapeHTML(song.albumName || "")}" placeholder="Album or project name"></label>
+                    <label>Genre / music style<input type="text" maxlength="60" data-meta-field="genre" value="${escapeHTML(song.genre || song.musicStyle || "")}" placeholder="e.g. Hip-Hop, R&B, Gospel"></label>
+                    <button type="button" class="collection-action-btn" data-save-metadata="${id}">💾 SAVE DETAILS</button>
+                </details>
                 ${controls}
                 <div class="music-card-actions">
                     <label class="collection-action-btn cover-upload-label" for="coverUpload_${id}">🖼️ ${song.coverImage ? "CHANGE COVER" : "UPLOAD COVER"}</label>
@@ -1304,8 +1329,41 @@ function renderMusicCollection() {
             </div>`;
     }).join("");
 
-    collection.innerHTML = toolbar + '<div class="music-collection-grid">' + cards + '</div>';
+    collection.innerHTML = toolbar + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
+
+/* TRACK SORTING */
+document.addEventListener("change", event => {
+    if (event.target && event.target.id === "musicSort") renderMusicCollection();
+});
+
+/* AUTOMATIC TRACK DURATION DETECTION */
+const durationChecks = new Set();
+function detectTrackDuration(trackId, audioURL) {
+    if (!trackId || !audioURL || durationChecks.has(String(trackId))) return;
+    durationChecks.add(String(trackId));
+    const probe = new Audio();
+    probe.preload = "metadata";
+    probe.addEventListener("loadedmetadata", () => {
+        if (!Number.isFinite(probe.duration) || probe.duration <= 0) return;
+        const tasks = getSavedTasks();
+        const track = tasks.find(item => String(item.id) === String(trackId));
+        if (track && !track.durationSeconds) {
+            track.durationSeconds = Math.round(probe.duration);
+            saveTasks(tasks);
+            renderMusicCollection();
+        }
+        probe.src = "";
+    }, { once: true });
+    probe.addEventListener("error", () => durationChecks.delete(String(trackId)), { once: true });
+    probe.src = audioURL;
+}
+document.addEventListener("DOMContentLoaded", () => {
+    getSavedTasks().forEach(track => {
+        const url = safeAudioURL(track.audioUrl);
+        if (url && !track.durationSeconds) detectTrackDuration(track.id, url);
+    });
+});
 
 /* TRACK COVER ARTWORK */
 async function compressCoverImage(file) {
@@ -1362,6 +1420,21 @@ PLAY / DELETE / DOWNLOAD EVENTS
 ========================================== */
 
 document.addEventListener("click", async event => {
+
+const metadataButton = event.target.closest("[data-save-metadata]");
+if (metadataButton) {
+    const card = metadataButton.closest(".music-track-card");
+    const trackId = String(metadataButton.dataset.saveMetadata);
+    const fields = card ? card.querySelectorAll("[data-meta-field]") : [];
+    const tasks = getSavedTasks();
+    const track = tasks.find(item => String(item.id) === trackId);
+    if (!track) { alert("This track could not be found."); return; }
+    fields.forEach(field => { track[field.dataset.metaField] = field.value.trim(); });
+    track.metadataUpdatedAt = new Date().toISOString();
+    if (!saveTasks(tasks)) { alert("Unable to save track details. Your browser storage may be full."); return; }
+    renderMusicCollection();
+    return;
+}
 
 const playButton = event.target.closest("[data-play-music]");
 

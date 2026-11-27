@@ -726,6 +726,14 @@ create: `
 
         <form id="instrumentalForm">
 
+            <label for="instrumentalTitle">Instrumental Title</label>
+            <input
+                id="instrumentalTitle"
+                type="text"
+                maxlength="150"
+                placeholder="Give your beat a name (e.g. Midnight Bounce)"
+            >
+
             <label for="instrumentalPrompt">Describe Your Instrumental</label>
 
             <textarea
@@ -1812,6 +1820,9 @@ form.addEventListener("submit", async event => {
         .getElementById("instrumentalPrompt")
         .value.trim();
 
+    const titleInput = document.getElementById("instrumentalTitle");
+    const instrumentalTitle = titleInput?.value.trim() || "AI Instrumental";
+
     const genre = document.getElementById("instrumentalGenre")?.value || "Afrobeats";
     const mood = document.getElementById("instrumentalMood")?.value || "energetic and uplifting";
     const tempo = document.getElementById("instrumentalTempo")?.value || "mid-tempo";
@@ -1907,7 +1918,7 @@ form.addEventListener("submit", async event => {
 
         saveTask({
             id: String(taskId),
-            title: "AI Instrumental",
+            title: instrumentalTitle,
             type: "instrumental",
             status: task.status || "preparing",
             createdAt: new Date().toISOString()
@@ -1918,7 +1929,7 @@ form.addEventListener("submit", async event => {
         checkMusicTask(
             String(taskId),
             status,
-            "AI Instrumental",
+            instrumentalTitle,
             "instrumental"
         );
 

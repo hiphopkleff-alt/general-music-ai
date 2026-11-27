@@ -726,14 +726,74 @@ create: `
 
         <form id="instrumentalForm">
 
-            <label>Describe Your Instrumental</label>
+            <label for="instrumentalPrompt">Describe Your Instrumental</label>
 
             <textarea
                 id="instrumentalPrompt"
-                maxlength="1024"
-                placeholder="Describe your beat, instruments and sound..."
+                maxlength="700"
+                placeholder="Describe the beat you want, its energy, sound and musical direction..."
                 required
             ></textarea>
+
+            <div class="form-row smart-controls">
+                <div>
+                    <label for="instrumentalGenre">Beat Genre</label>
+                    <select id="instrumentalGenre">
+                        <option value="Afrobeats">Afrobeats</option>
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="R&B">R&amp;B</option>
+                        <option value="Blues">Blues</option>
+                        <option value="Gospel">Gospel</option>
+                        <option value="Amapiano">Amapiano</option>
+                        <option value="Afro-fusion">Afro-fusion</option>
+                        <option value="Highlife">Highlife</option>
+                        <option value="Reggae">Reggae</option>
+                        <option value="Dancehall">Dancehall</option>
+                        <option value="Soul">Soul</option>
+                        <option value="Jazz">Jazz</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Drill">Drill</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Electronic">Electronic</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="instrumentalMood">Beat Mood</label>
+                    <select id="instrumentalMood">
+                        <option value="energetic and uplifting">Energetic</option>
+                        <option value="dark and hard-hitting">Dark / Hard</option>
+                        <option value="romantic and emotional">Romantic</option>
+                        <option value="chill and relaxing">Chill</option>
+                        <option value="inspirational and soulful">Inspirational</option>
+                        <option value="party-ready and vibrant">Party</option>
+                        <option value="smooth and soulful">Smooth</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row smart-controls">
+                <div>
+                    <label for="instrumentalTempo">Tempo</label>
+                    <select id="instrumentalTempo">
+                        <option value="mid-tempo">Mid-tempo</option>
+                        <option value="slow">Slow</option>
+                        <option value="upbeat">Upbeat</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="instrumentalInstruments">Bass / Rhythm</label>
+                    <select id="instrumentalInstruments">
+                        <option value="">No preference</option>
+                        <option value="log drum">Log drum</option>
+                        <option value="808 bass">808 bass</option>
+                        <option value="log drum and 808 bass">Log drum + 808 bass</option>
+                        <option value="deep sub bass">Deep sub bass</option>
+                        <option value="live drums and percussion">Live drums / percussion</option>
+                        <option value="piano and guitar">Piano / guitar</option>
+                    </select>
+                </div>
+            </div>
 
             <label>AI Music Model</label>
 
@@ -1748,9 +1808,21 @@ if (!form) return;
 form.addEventListener("submit", async event => {
     event.preventDefault();
 
-    const prompt = document
+    const description = document
         .getElementById("instrumentalPrompt")
         .value.trim();
+
+    const genre = document.getElementById("instrumentalGenre")?.value || "Afrobeats";
+    const mood = document.getElementById("instrumentalMood")?.value || "energetic and uplifting";
+    const tempo = document.getElementById("instrumentalTempo")?.value || "mid-tempo";
+    const instruments = document.getElementById("instrumentalInstruments")?.value || "";
+    const prompt = [
+        description,
+        "Genre: " + genre + ".",
+        "Mood: " + mood + ".",
+        "Tempo: " + tempo + ".",
+        instruments ? "Preferred bass and rhythm: " + instruments + "." : ""
+    ].filter(Boolean).join(" ").slice(0, 1024);
 
     const model = document
         .getElementById("instrumentalModel")

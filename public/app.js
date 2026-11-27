@@ -3083,16 +3083,12 @@ document.addEventListener("click", event => {
 
     if (!pages[destination]) return;
 
-    // Real links must load their matching HTML document. Do not cancel
-    // the browser's normal navigation for sidebar and other anchor links.
-    if (target.tagName === "A" && target.hasAttribute("href")) {
-        return;
-    }
-
-    // Dashboard feature cards are clickable containers rather than links.
-    // Send them to the same independent page URL as the sidebar.
+    // Keep navigation inside the application. The server currently serves
+    // the same shell document at each URL, while the pages object contains
+    // the actual page layouts. Render the selected layout instead of
+    // reloading another copy of the dashboard.
     event.preventDefault();
-    window.location.assign(pagePaths[destination]);
+    navigate(destination);
 });
 
 /* ==========================================

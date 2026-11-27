@@ -973,3 +973,9 @@ button {
 .album-playback-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
 .album-playback-actions button { min-height:40px; }
 .album-playback-actions .primary-btn { padding:10px 16px; }
+
+/* LOCAL MUSIC IMPORT */
+.music-import-input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.import-music-label { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:11px 16px; font-size:11px; border-radius:22px; color:#061329; background:linear-gradient(100deg,var(--cyan),var(--blue)); font-weight:800; }
+.collection-playlist-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+@media(max-width:650px) { .collection-playlist-actions > * { flex:1 1 100%; text-align:center; } }

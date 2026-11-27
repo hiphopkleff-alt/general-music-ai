@@ -410,18 +410,14 @@ NEXT TRACK
 ========================================== */
 
 async function playNextTrack() {
-refreshPlaylist();
+    refreshPlaylist();
+    if (!playerPlaylist.length) return;
 
-if (playerPlaylist.length === 0) return;
-
-let nextIndex = currentTrackIndex + 1;
-
-if (nextIndex >= playerPlaylist.length) {
-    nextIndex = 0;
-}
-
-await playTrack(playerPlaylist[nextIndex].id);
-
+    const currentIndex = playerPlaylist.findIndex(
+        track => String(track.id) === String(currentTrackId)
+    );
+    const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % playerPlaylist.length;
+    await playTrack(playerPlaylist[nextIndex].id);
 }
 
 /* ==========================================
@@ -429,25 +425,24 @@ PREVIOUS TRACK
 ========================================== */
 
 async function playPreviousTrack() {
-if (!audioElement) return;
+    if (!audioElement) return;
 
-if (audioElement.currentTime > 3) {
-    audioElement.currentTime = 0;
-    return;
-}
+    if (audioElement.currentTime > 3) {
+        audioElement.currentTime = 0;
+        return;
+    }
 
-refreshPlaylist();
+    refreshPlaylist();
+    if (!playerPlaylist.length) return;
 
-if (playerPlaylist.length === 0) return;
+    const currentIndex = playerPlaylist.findIndex(
+        track => String(track.id) === String(currentTrackId)
+    );
+    const previousIndex = currentIndex < 0
+        ? playerPlaylist.length - 1
+        : (currentIndex - 1 + playerPlaylist.length) % playerPlaylist.length;
 
-let previousIndex = currentTrackIndex - 1;
-
-if (previousIndex < 0) {
-    previousIndex = playerPlaylist.length - 1;
-}
-
-await playTrack(playerPlaylist[previousIndex].id);
-
+    await playTrack(playerPlaylist[previousIndex].id);
 }
 
 /* ==========================================
@@ -1571,15 +1566,24 @@ if (metadataButton) {
 const playButton = event.target.closest("[data-play-music]");
 
 if (playButton) {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (collectionMode === "album" && activeAlbumId) {
         const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
         playbackQueueIds = album ? [...album.trackIds] : null;
     } else {
         playbackQueueIds = null;
     }
-    recordRecentlyPlayed(playButton.dataset.playMusic);
-    await playTrack(playButton.dataset.playMusic);
-    renderMusicCollection();
+
+    const trackId = playButton.dataset.playMusic;
+    recordRecentlyPlayed(trackId);
+    await playTrack(trackId);
+
+    // Update this control only; do not rebuild the collection or disturb layout.
+    const isPlaying = currentTrackId && String(currentTrackId) === String(trackId) &&
+        audioElement && !audioElement.paused;
+    playButton.textContent = isPlaying ? "❚❚ PLAYING" : "▶ PLAY TRACK";
     return;
 }
 
@@ -3207,7 +3211,7 @@ async function restoreGlobalPlayerState() {
     currentTrackIndex = playerPlaylist.indexOf(track);
     updatePlayerInformation(track);
 
-    const audioURL = safeAudioURL(track.audioUrl);
+    const audioURL = await resolveTrackAudioURL(track);
     if (!audioURL || !audioElement) return;
 
     const restorePosition = () => {

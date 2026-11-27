@@ -632,21 +632,24 @@ create: `
                     <label>Music Genre</label>
 
                     <select id="genre">
-                        <option>Afrobeats</option>
-                        <option>Gospel</option>
-                        <option>Amapiano</option>
-                        <option>Hip-Hop</option>
-                        <option>R&B</option>
-                        <option>Reggae</option>
-                        <option>Pop</option>
-                        <option>Highlife</option>
-                        <option>Jazz</option>
-                        <option>Electronic</option>
-                        <option>Afro-fusion</option>
-                        <option>Dancehall</option>
-                        <option>Drill</option>
-                        <option>Trap</option>
-                        <option>Soul</option>
+                        <option value="Afrobeats">Afrobeats</option>
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="R&B">R&amp;B</option>
+                        <option value="Blues">Blues</option>
+                        <option value="Gospel">Gospel</option>
+                        <option value="Amapiano">Amapiano</option>
+                        <option value="Afro-fusion">Afro-fusion</option>
+                        <option value="Highlife">Highlife</option>
+                        <option value="Reggae">Reggae</option>
+                        <option value="Dancehall">Dancehall</option>
+                        <option value="Soul">Soul</option>
+                        <option value="Jazz">Jazz</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Rock">Rock</option>
+                        <option value="Country">Country</option>
+                        <option value="Electronic">Electronic</option>
+                        <option value="Drill">Drill</option>
+                        <option value="Trap">Trap</option>
                     </select>
                 </div>
 
@@ -684,9 +687,13 @@ create: `
                 </div>
             </div>
 
-            <label for="songInstruments">Preferred Instruments (optional)</label>
-            <input id="songInstruments" type="text" maxlength="180"
-                placeholder="e.g. talking drum, piano, guitar, deep bass">
+            <label for="songInstruments">Preferred Bass / Rhythm (optional)</label>
+            <select id="songInstruments">
+                <option value="">No preference</option>
+                <option value="log drum">Log drum</option>
+                <option value="808 bass">808 bass</option>
+                <option value="log drum and 808 bass">Log drum + 808 bass</option>
+            </select>
                 </div>
 
             </div>

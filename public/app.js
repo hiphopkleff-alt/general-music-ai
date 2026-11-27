@@ -1307,10 +1307,14 @@ function renderMusicCollection() {
             ${collectionMode === "playlists" || collectionMode === "playlist" ? `
                 <div class="collection-playlist-list">
                     ${playlists.length ? playlists.map(item => `
-                        <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${escapeHTML(item.name)} <small>${item.trackIds.length}</small></button>
+                        <div class="collection-playlist-item">
+                            <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${escapeHTML(item.name)} <small>${item.trackIds.length} tracks</small></button>
+                            <button type="button" class="collection-action-btn" data-play-playlist="${escapeHTML(item.id)}">▶ PLAY</button>
+                            <button type="button" class="collection-action-btn" data-rename-playlist="${escapeHTML(item.id)}">✏️ RENAME</button>
+                            <button type="button" class="collection-action-btn" data-delete-playlist="${escapeHTML(item.id)}">🗑️ DELETE</button>
+                        </div>
                     `).join("") : '<p class="collection-muted">Create a playlist to organise your music.</p>'}
-                </div>
-            ` : ""}
+                </div>            ` : ""}
             ${collectionMode === "albums" || collectionMode === "album" ? '<div class="album-library-grid">' + getMusicAlbums().map(album => '<div class="album-library-card">' +
                 '<button type="button" class="album-open-button" data-open-album="' + escapeHTML(album.id) + '">' +
                 (album.coverImage ? '<span class="album-mini-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></span>' : '<span class="album-mini-cover album-placeholder">💿</span>') +
@@ -1717,6 +1721,41 @@ if (createPlaylistButton) {
         saveCustomPlaylists(playlists);
         collectionMode = "playlists";
         activePlaylistId = null;
+        renderMusicCollection();
+    }
+    return;
+}
+
+const playPlaylistButton = event.target.closest("[data-play-playlist]");
+if (playPlaylistButton) {
+    const playlist = getCustomPlaylists().find(item => String(item.id) === String(playPlaylistButton.dataset.playPlaylist));
+    const playableIds = playlist ? (playlist.trackIds || []).filter(id => getSavedTasks().some(track => String(track.id) === String(id) && hasPlayableAudio(track))) : [];
+    if (!playableIds.length) { alert("This playlist has no playable tracks yet."); return; }
+    playbackQueueIds = playableIds;
+    recordRecentlyPlayed(playableIds[0]);
+    await playTrack(playableIds[0]);
+    return;
+}
+
+const renamePlaylistButton = event.target.closest("[data-rename-playlist]");
+if (renamePlaylistButton) {
+    const playlists = getCustomPlaylists();
+    const playlist = playlists.find(item => String(item.id) === String(renamePlaylistButton.dataset.renamePlaylist));
+    if (playlist) {
+        const name = prompt("Enter a new playlist name:", playlist.name);
+        if (name && name.trim()) { playlist.name = name.trim().slice(0, 50); saveCustomPlaylists(playlists); renderMusicCollection(); }
+    }
+    return;
+}
+
+const deletePlaylistButton = event.target.closest("[data-delete-playlist]");
+if (deletePlaylistButton) {
+    const id = String(deletePlaylistButton.dataset.deletePlaylist);
+    const playlist = getCustomPlaylists().find(item => String(item.id) === id);
+    if (playlist && confirm('Delete the playlist "' + playlist.name + '"? Your original music tracks will remain in MY MUSIC.')) {
+        saveCustomPlaylists(getCustomPlaylists().filter(item => String(item.id) !== id));
+        if (String(activePlaylistId) === id) { activePlaylistId = null; collectionMode = "playlists"; }
+        playbackQueueIds = null;
         renderMusicCollection();
     }
     return;

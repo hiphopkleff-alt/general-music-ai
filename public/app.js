@@ -264,8 +264,44 @@ if (playerElements.cover) {
 
 }
 
+/* LOCAL MUSIC IMPORT STORAGE (audio blobs stay out of localStorage) */
+const LOCAL_AUDIO_DB = "general_music_ai_audio_v1";
+const LOCAL_AUDIO_STORE = "tracks";
+const localAudioURLs = new Map();
+function openLocalAudioDB() { return new Promise((resolve, reject) => {
+ if (!("indexedDB" in window)) return reject(new Error("This browser does not support local music storage."));
+ const request = indexedDB.open(LOCAL_AUDIO_DB, 1);
+ request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains(LOCAL_AUDIO_STORE)) db.createObjectStore(LOCAL_AUDIO_STORE, { keyPath: 'id' }); };
+ request.onsuccess = () => resolve(request.result);
+ request.onerror = () => reject(new Error("Unable to open local music storage."));
+}); }
+async function saveLocalAudio(id, file) { const db = await openLocalAudioDB(); return new Promise((resolve, reject) => {
+ const tx = db.transaction(LOCAL_AUDIO_STORE, 'readwrite');
+ tx.objectStore(LOCAL_AUDIO_STORE).put({ id: String(id), blob: file, name: file.name, type: file.type || 'audio/mpeg' });
+ tx.oncomplete = () => { db.close(); resolve(true); };
+ tx.onerror = () => { db.close(); reject(new Error("Unable to save this audio file on your device.")); };
+ tx.onabort = () => { db.close(); reject(new Error("Audio import was cancelled by browser storage.")); };
+}); }
+async function getLocalAudio(id) { const db = await openLocalAudioDB(); return new Promise((resolve, reject) => {
+ const tx = db.transaction(LOCAL_AUDIO_STORE, 'readonly'); const request = tx.objectStore(LOCAL_AUDIO_STORE).get(String(id));
+ request.onsuccess = () => { const value = request.result; db.close(); resolve(value || null); };
+ request.onerror = () => { db.close(); reject(new Error("Unable to read the imported audio file.")); };
+}); }
+async function deleteLocalAudio(id) { const db = await openLocalAudioDB(); return new Promise((resolve, reject) => {
+ const tx = db.transaction(LOCAL_AUDIO_STORE, 'readwrite'); tx.objectStore(LOCAL_AUDIO_STORE).delete(String(id));
+ tx.oncomplete = () => { db.close(); resolve(); };
+ tx.onerror = () => { db.close(); reject(new Error("Unable to remove the imported audio file.")); };
+}); }
+function hasPlayableAudio(track) { return Boolean(track && (safeAudioURL(track.audioUrl) || track.audioBlobId)); }
+async function resolveTrackAudioURL(track) {
+ const remoteURL = safeAudioURL(track && track.audioUrl); if (remoteURL) return remoteURL;
+ if (!track || !track.audioBlobId) return '';
+ const id = String(track.audioBlobId); if (localAudioURLs.has(id)) return localAudioURLs.get(id);
+ const saved = await getLocalAudio(id); if (!saved || !saved.blob) return '';
+ const url = URL.createObjectURL(saved.blob); localAudioURLs.set(id, url); return url;
+}
 function refreshPlaylist() {
-const playableTasks = getSavedTasks().filter(task => Boolean(safeAudioURL(task.audioUrl)));
+const playableTasks = getSavedTasks().filter(hasPlayableAudio);
 if (Array.isArray(playbackQueueIds)) {
     const byId = new Map(playableTasks.map(task => [String(task.id), task]));
     playerPlaylist = playbackQueueIds.map(id => byId.get(String(id))).filter(Boolean);
@@ -301,10 +337,10 @@ if (index < 0) {
 }
 
 const track = playerPlaylist[index];
-const audioURL = safeAudioURL(track.audioUrl);
+const audioURL = await resolveTrackAudioURL(track);
 
 if (!audioURL) {
-    alert("This track has an invalid audio address.");
+    alert("This track audio file could not be found on this device.");
     return;
 }
 
@@ -1263,6 +1299,8 @@ function renderMusicCollection() {
                 `).join("")}
             </div>
             <div class="collection-playlist-actions">
+                <label class="primary-btn import-music-label" for="importMusicFiles">⬆️ IMPORT MUSIC</label>
+                <input id="importMusicFiles" class="music-import-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple>
                 <button type="button" class="primary-btn" data-create-playlist>＋ CREATE PLAYLIST</button>
                 <button type="button" class="primary-btn" data-create-album>＋ CREATE ALBUM</button>
             </div>
@@ -1323,13 +1361,14 @@ function renderMusicCollection() {
         const id = escapeHTML(song.id);
         const status = escapeHTML(song.status || "preparing");
         const playableURL = safeAudioURL(song.audioUrl);
+        const isLocalAudio = Boolean(song.audioBlobId);
         const favorite = favorites.includes(String(song.id));
         const isCurrentTrack = String(currentTrackId) === String(song.id);
-        const controls = playableURL ? `
+        const controls = (playableURL || isLocalAudio) ? `
             <div class="music-card-controls">
                 <button class="primary-btn" type="button" data-play-music="${id}">${isCurrentTrack && audioElement && !audioElement.paused ? "▶ NOW PLAYING" : "▶ PLAY TRACK"}</button>
-                <a class="primary-btn" href="${escapeHTML(playableURL)}" download target="_blank" rel="noopener noreferrer" data-download-music="${id}">⬇️ DOWNLOAD</a>
-            </div>` : '<p>🎧 Audio will appear here when generation succeeds.</p>';
+                ${playableURL ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download data-download-music="${id}">⬇️ DOWNLOAD</a>` : `<button class="primary-btn" type="button" data-download-local="${id}">⬇️ DOWNLOAD</button>`}
+            </div>` : '<p>🎧 Audio will appear here when generation succeeds or you import a file.</p>';
 
         const coverMarkup = song.coverImage
             ? '<div class="music-cover-art has-image" style="background-image:url(&quot;' + escapeHTML(song.coverImage) + '&quot;)"></div>'
@@ -1339,7 +1378,7 @@ function renderMusicCollection() {
             <div class="tool-card music-track-card">
                 ${coverMarkup}
                 <h3>🎵 ${title}</h3>
-                <p class="music-track-type">${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
+                <p class="music-track-type">${song.type === "imported" ? "📥 IMPORTED AUDIO" : song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
                 <p>Status: ${status}</p>
                 <div class="music-track-details">
                     <p><strong>Artist:</strong> ${escapeHTML(song.artistName || "Not set")}</p>
@@ -1373,6 +1412,45 @@ function renderMusicCollection() {
     collection.innerHTML = toolbar + albumHeaderMarkup + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
 
+/* IMPORT MP3 / M4A FILES INTO THE LOCAL MUSIC LIBRARY */
+document.addEventListener("change", async event => {
+ const input = event.target.closest("#importMusicFiles");
+ if (!input || !input.files || !input.files.length) return;
+ const files = Array.from(input.files); input.disabled = true; let imported = 0;
+ try {
+  for (const file of files) {
+   const extension = (file.name.split(".").pop() || "").toLowerCase();
+   if (!["mp3", "m4a"].includes(extension)) throw new Error(file.name + ": choose an MP3 or M4A file.");
+   if (file.size > 20 * 1024 * 1024) throw new Error(file.name + ": file is larger than 20 MB.");
+   if (!file.size) throw new Error(file.name + ": this file is empty.");
+   const id = "local_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+   await saveLocalAudio(id, file);
+   const track = { id, title: file.name.replace(/\.(mp3|m4a)$/i, "").slice(0, 100) || "Imported Song", type: "imported", status: "ready", audioUrl: "", audioBlobId: id, importedFileName: file.name, artistName: "Imported Artist", albumName: "", genre: "", createdAt: new Date().toISOString() };
+   const tasks = getSavedTasks(); tasks.unshift(track);
+   if (!saveTasks(tasks)) { await deleteLocalAudio(id); throw new Error("Your browser music list is full. Remove unused tracks and try again."); }
+   const url = await resolveTrackAudioURL(track); if (url) detectTrackDuration(id, url);
+   imported++;
+  }
+  collectionMode = "all"; activeAlbumId = null; activePlaylistId = null; renderMusicCollection();
+  alert(imported + (imported === 1 ? " song was" : " songs were") + " imported into MY MUSIC.");
+ } catch (error) { alert(error.message || "Unable to import music."); renderMusicCollection(); }
+ finally { input.disabled = false; input.value = ""; }
+});
+
+/* DOWNLOAD A LOCALLY IMPORTED TRACK */
+document.addEventListener("click", async event => {
+ const button = event.target.closest("[data-download-local]"); if (!button) return;
+ button.disabled = true;
+ try {
+  const track = getSavedTasks().find(item => String(item.id) === String(button.dataset.downloadLocal));
+  const saved = track && track.audioBlobId ? await getLocalAudio(track.audioBlobId) : null;
+  if (!saved || !saved.blob) throw new Error("The imported audio file is no longer available.");
+  const url = URL.createObjectURL(saved.blob); const link = document.createElement("a");
+  link.href = url; link.download = saved.name || ((track.title || "music") + ".mp3");
+  document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+ } catch (error) { alert(error.message || "Unable to download this track."); }
+ finally { button.disabled = false; }
+});
 /* TRACK SORTING */
 document.addEventListener("change", event => {
     if (event.target && event.target.id === "musicSort") renderMusicCollection();
@@ -1511,7 +1589,7 @@ if (playAlbumButton || shuffleAlbumButton) {
     const button = playAlbumButton || shuffleAlbumButton;
     const album = getMusicAlbums().find(item => String(item.id) === String(button.dataset.playAlbum || button.dataset.shuffleAlbum));
     if (!album) return;
-    const playableIds = album.trackIds.filter(id => getSavedTasks().some(track => String(track.id) === String(id) && Boolean(safeAudioURL(track.audioUrl))));
+    const playableIds = album.trackIds.filter(id => getSavedTasks().some(track => String(track.id) === String(id) && hasPlayableAudio(track)));
     if (!playableIds.length) {
         alert("This album has no playable tracks yet.");
         return;

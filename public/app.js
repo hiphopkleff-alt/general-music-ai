@@ -31,7 +31,8 @@ const pageTitles = {
     stems: "STEM SEPARATION",
     music: "MY MUSIC",
     library: "MUSIC LIBRARY",
-    settings: "SETTINGS"
+    settings: "SETTINGS",
+    nowplaying: "NOW PLAYING"
 };
 
 const STORAGE_KEY = "gtp_music_tasks";
@@ -248,6 +249,9 @@ document.querySelectorAll("[data-inline-current]").forEach(element => {
 document.querySelectorAll("[data-inline-duration]").forEach(element => {
     element.textContent = formatTime(duration);
 });
+document.querySelectorAll("[data-full-progress]").forEach(element => { element.value = duration > 0 ? (current / duration) * 100 : 0; });
+document.querySelectorAll("[data-full-current]").forEach(element => { element.textContent = formatTime(current); });
+document.querySelectorAll("[data-full-duration]").forEach(element => { element.textContent = formatTime(duration); });
 
 }
 
@@ -644,6 +648,7 @@ const pages = {
 
 dashboard: originalDashboard,
 
+nowplaying: `<section class="full-now-playing-page" id="fullNowPlaying"><div class="now-playing-empty">Choose a song from MY MUSIC to start playing.</div></section>`,
 
 /* ======================================
    AI MUSIC GENERATOR
@@ -1645,6 +1650,8 @@ PLAY / DELETE / DOWNLOAD EVENTS
 ========================================== */
 
 document.addEventListener("input", event => {
+    const fullSeek = event.target.closest("[data-full-progress]");
+    if (fullSeek && audioElement && Number.isFinite(audioElement.duration) && audioElement.duration > 0) { audioElement.currentTime = (Number(fullSeek.value) / 100) * audioElement.duration; return; }
     const seek = event.target.closest("[data-inline-progress]");
     if (!seek || !audioElement || !Number.isFinite(audioElement.duration) || audioElement.duration <= 0) return;
     audioElement.currentTime = (Number(seek.value) / 100) * audioElement.duration;
@@ -1652,6 +1659,11 @@ document.addEventListener("input", event => {
 
 document.addEventListener("click", async event => {
 
+const miniPlayer = event.target.closest(".player .now-playing");
+if (miniPlayer && currentTrackId) { event.preventDefault(); navigate("nowplaying"); return; }
+if (event.target.closest("[data-full-toggle]")) { event.preventDefault(); await togglePlayback(); renderNowPlayingPage(); return; }
+if (event.target.closest("[data-full-next]")) { event.preventDefault(); await playNextTrack(); renderNowPlayingPage(); return; }
+if (event.target.closest("[data-full-previous]")) { event.preventDefault(); await playPreviousTrack(); renderNowPlayingPage(); return; }
 const metadataButton = event.target.closest("[data-save-metadata]");
 if (metadataButton) {
     const card = metadataButton.closest(".music-track-card");
@@ -3225,7 +3237,8 @@ const pagePaths = {
     stems: "/stems",
     music: "/music",
     library: "/library",
-    settings: "/settings"
+    settings: "/settings",
+    nowplaying: "/now-playing"
 };
 
 function getPageFromPath() {
@@ -3349,6 +3362,33 @@ function initializeSettings() {
 }
 
 /* ==========================================
+FULL-SCREEN NOW PLAYING VIEW
+========================================== */
+function renderNowPlayingPage() {
+    const host = document.getElementById("fullNowPlaying");
+    if (!host) return;
+    const track = getSavedTasks().find(item => String(item.id) === String(currentTrackId));
+    if (!track) {
+        host.innerHTML = '<div class="now-playing-empty"><div class="now-playing-empty-icon">♫</div><h2>NOTHING PLAYING</h2><p>Open MY MUSIC and choose a track to begin.</p><button type="button" class="primary-btn" data-page="music">OPEN MY MUSIC</button></div>';
+        return;
+    }
+    const title = escapeHTML(track.title || "Untitled Song");
+    const artist = escapeHTML(track.artistName || "Unknown artist");
+    const cover = track.coverImage
+        ? '<div class="full-player-art has-art" style="background-image:url(&quot;' + escapeHTML(track.coverImage) + '&quot;)"></div>'
+        : '<div class="full-player-art">' + (track.type === "instrumental" ? "♫" : "🎵") + '</div>';
+    const download = track.audioBlobId
+        ? '<button type="button" class="full-player-secondary" data-download-local="' + escapeHTML(track.id) + '">⇩ DOWNLOAD</button>'
+        : (safeAudioURL(track.audioUrl) ? '<a class="full-player-secondary" href="' + escapeHTML(safeAudioURL(track.audioUrl)) + '" download>⇩ DOWNLOAD</a>' : '');
+    host.innerHTML = '<div class="full-player-top"><span>GENERAL MUSIC AI · NOW PLAYING</span><button type="button" class="full-player-back" data-page="music">← MY MUSIC</button></div>' +
+        '<div class="full-player-content">' + cover +
+        '<div class="full-player-track-meta"><span class="full-player-kicker">' + escapeHTML(track.genre || track.musicStyle || (track.type === "instrumental" ? "INSTRUMENTAL" : "YOUR MUSIC")) + '</span><h2>' + title + '</h2><p>' + artist + '</p><small>' + escapeHTML(track.albumName || "Single") + '</small></div>' +
+        '<input class="full-player-progress" type="range" min="0" max="100" step="0.1" value="' + (audioElement && audioElement.duration > 0 ? (audioElement.currentTime / audioElement.duration) * 100 : 0) + '" data-full-progress aria-label="Track progress">' +
+        '<div class="full-player-times"><span data-full-current>' + formatTime(audioElement ? audioElement.currentTime : 0) + '</span><span data-full-duration>' + formatTime(audioElement ? audioElement.duration : 0) + '</span></div>' +
+        '<div class="full-player-controls"><button type="button" data-full-previous aria-label="Previous track">⏮</button><button type="button" class="full-player-play" data-full-toggle aria-label="Play or pause">' + (audioElement && !audioElement.paused ? "Ⅱ" : "▶") + '</button><button type="button" data-full-next aria-label="Next track">⏭</button></div>' + download + '</div>';
+}
+
+/* ==========================================
 PAGE INITIALIZER
 ========================================== */
 
@@ -3360,6 +3400,10 @@ if (page === "dashboard") {
 
 if (page === "music" || page === "library") {
     renderMusicCollection();
+}
+
+if (page === "nowplaying") {
+    renderNowPlayingPage();
 }
 
 if (page === "settings") {

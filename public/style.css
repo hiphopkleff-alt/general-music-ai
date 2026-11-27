@@ -935,3 +935,17 @@ button {
 .music-cover-input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
 .cover-upload-label { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
 @media(max-width:650px) { .music-cover-art { max-height:none; } .player-cover { width:40px; height:40px; flex-basis:40px; } }
+
+/* PROFESSIONAL TRACK METADATA */
+.music-track-details { margin:12px 0; padding:12px; border:1px solid rgba(25,217,255,.18); border-radius:10px; background:rgba(5,15,35,.55); }
+.music-track-details p { margin:5px 0; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+.music-track-details strong { color:#e8f2ff; }
+.music-sort-row { display:flex; align-items:center; gap:12px; margin:0 0 16px; }
+.music-sort-row label { color:var(--cyan); font-size:11px; font-weight:bold; }
+.music-sort-row select, .track-metadata-editor input { min-width:0; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:#09152d; color:#fff; }
+.track-metadata-editor { margin:12px 0; padding:12px; border:1px solid rgba(25,217,255,.22); border-radius:10px; background:rgba(25,217,255,.04); }
+.track-metadata-editor summary { color:var(--cyan); font-size:11px; font-weight:bold; cursor:pointer; }
+.track-metadata-editor label { display:block; margin-top:11px; color:#dbe8ff; font-size:11px; font-weight:bold; }
+.track-metadata-editor input { display:block; width:100%; margin-top:6px; }
+.track-metadata-editor button { width:100%; margin-top:12px; }
+@media(max-width:650px) { .music-sort-row { align-items:stretch; flex-direction:column; gap:6px; } .music-sort-row select { width:100%; } }

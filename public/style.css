@@ -1093,3 +1093,5 @@ button {
  .inline-now-playing { padding:10px; }
  .inline-player-main-controls { gap:9px; }
 }
+
+.inline-playing-badge { color:#65ffc0; font-size:9px; font-weight:900; letter-spacing:1px; white-space:nowrap; }

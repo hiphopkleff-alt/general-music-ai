@@ -1241,6 +1241,21 @@ function isFavorite(trackId) {
     return getFavorites().includes(String(trackId));
 }
 
+function sortedTrackIdsForInlinePlayer(currentId) {
+    const saved = getSavedTasks();
+    let rows = saved;
+    if (collectionMode === "favorites") rows = saved.filter(track => getFavorites().includes(String(track.id)));
+    else if (collectionMode === "recent") rows = getRecentlyPlayed().map(id => saved.find(track => String(track.id) === String(id))).filter(Boolean);
+    else if (collectionMode === "playlist") {
+        const list = getCustomPlaylists().find(item => String(item.id) === String(activePlaylistId));
+        rows = list ? list.trackIds.map(id => saved.find(track => String(track.id) === String(id))).filter(Boolean) : [];
+    } else if (collectionMode === "album") {
+        const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
+        rows = album ? album.trackIds.map(id => saved.find(track => String(track.id) === String(id))).filter(Boolean) : [];
+    }
+    return rows.filter(hasPlayableAudio).map(track => String(track.id));
+}
+
 function renderMusicCollection() {
     const collection = document.getElementById("musicCollection");
     if (!collection) return;
@@ -1370,10 +1385,30 @@ function renderMusicCollection() {
         const localAudioReady = !isLocalAudio || Boolean(localAudioURL);
         const favorite = favorites.includes(String(song.id));
         const isCurrentTrack = String(currentTrackId) === String(song.id);
+        const isExpandedPlayer = isCurrentTrack && Boolean(audioElement);
+        const playableIds = sortedTasks.filter(track => hasPlayableAudio(track)).map(track => String(track.id));
+        const currentQueueIndex = playableIds.indexOf(String(song.id));
+        const previousId = currentQueueIndex > 0 ? playableIds[currentQueueIndex - 1] : (playableIds.length > 1 ? playableIds[playableIds.length - 1] : "");
+        const nextId = currentQueueIndex >= 0 && playableIds.length > 1 ? playableIds[(currentQueueIndex + 1) % playableIds.length] : "";
+        const downloadControl = playableURL
+            ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}">⬇️ DOWNLOAD</a>`
+            : `<button class="primary-btn" type="button" disabled>PREPARING DOWNLOAD...</button>`;
         const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
             <div class="music-card-controls">
-                <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? (isCurrentTrack && audioElement && !audioElement.paused ? "❚❚ NOW PLAYING" : "▶ PLAY TRACK") : "PREPARING AUDIO..."}</button>
-                ${playableURL ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}">⬇️ DOWNLOAD</a>` : `<button class="primary-btn" type="button" disabled>PREPARING DOWNLOAD...</button>`}
+                ${isExpandedPlayer ? `
+                    <div class="inline-track-player">
+                        <div class="inline-player-heading">🎧 NOW PLAYING</div>
+                        <strong>${escapeHTML(song.artistName || "Unknown Artist")} — ${title}</strong>
+                        <div class="inline-player-controls">
+                            <button class="primary-btn" type="button" data-prev-music="${id}" ${previousId ? "" : "disabled"}>⏮ PREVIOUS</button>
+                            <button class="primary-btn" type="button" data-pause-music="${id}">${audioElement && !audioElement.paused ? "⏸ PAUSE" : "▶ RESUME"}</button>
+                            <button class="primary-btn" type="button" data-next-music="${id}" ${nextId ? "" : "disabled"}>⏭ NEXT</button>
+                            ${downloadControl}
+                        </div>
+                    </div>` : `
+                    <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? "▶ PLAY" : "PREPARING AUDIO..."}</button>
+                    ${downloadControl}
+                `}
             </div>` : '<p>🎧 Audio will appear here when generation succeeds or you import a file.</p>';
 
         const coverMarkup = song.coverImage
@@ -1596,10 +1631,50 @@ if (playButton) {
     recordRecentlyPlayed(trackId);
     await playTrack(trackId);
 
-    // Update this control only; do not rebuild the collection or disturb layout.
-    const isPlaying = currentTrackId && String(currentTrackId) === String(trackId) &&
-        audioElement && !audioElement.paused;
-    playButton.textContent = isPlaying ? "❚❚ PLAYING" : "▶ PLAY TRACK";
+    // Expand the embedded player inside the selected track card.
+    renderMusicCollection();
+    return;
+}
+
+const pauseInlineButton = event.target.closest("[data-pause-music]");
+if (pauseInlineButton) {
+    event.preventDefault();
+    if (audioElement && String(currentTrackId) === String(pauseInlineButton.dataset.pauseMusic)) {
+        if (audioElement.paused) {
+            try { await audioElement.play(); } catch (error) { console.error("Playback error:", error); }
+        } else {
+            audioElement.pause();
+        }
+        renderMusicCollection();
+    }
+    return;
+}
+
+const previousInlineButton = event.target.closest("[data-prev-music]");
+if (previousInlineButton) {
+    event.preventDefault();
+    const id = String(previousInlineButton.dataset.prevMusic);
+    const visibleIds = sortedTrackIdsForInlinePlayer(id);
+    if (visibleIds.length) {
+        playbackQueueIds = visibleIds;
+        refreshPlaylist();
+        await playPreviousTrack();
+        renderMusicCollection();
+    }
+    return;
+}
+
+const nextInlineButton = event.target.closest("[data-next-music]");
+if (nextInlineButton) {
+    event.preventDefault();
+    const id = String(nextInlineButton.dataset.nextMusic);
+    const visibleIds = sortedTrackIdsForInlinePlayer(id);
+    if (visibleIds.length) {
+        playbackQueueIds = visibleIds;
+        refreshPlaylist();
+        await playNextTrack();
+        renderMusicCollection();
+    }
     return;
 }
 

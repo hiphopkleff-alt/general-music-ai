@@ -1034,3 +1034,19 @@ button {
     .compact-track-controls { gap:3px; }
     .track-icon-btn { width:27px;height:27px;min-width:27px;font-size:12px; }
 }
+
+/* Album manager refinements */
+.album-library-card { overflow:hidden; }
+.album-card-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.album-card-actions .collection-action-btn { min-width:0; padding:8px 5px; font-size:10px; text-align:center; }
+.album-detail-header { align-items:center; }
+.album-playback-actions { gap:7px; }
+.album-playback-actions button { min-height:36px; padding:8px 11px; font-size:10px; }
+.album-detail-copy { flex:1; min-width:0; }
+@media(max-width:520px) {
+ .album-detail-header { flex-direction:row; align-items:center; gap:12px; padding:12px; }
+ .album-detail-cover { width:82px; height:82px; flex:0 0 82px; }
+ .album-detail-copy h2 { font-size:17px; }
+ .album-playback-actions { gap:5px; }
+ .album-playback-actions button { min-height:32px; padding:7px 8px; font-size:9px; }
+}

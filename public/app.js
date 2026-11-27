@@ -210,6 +210,11 @@ playerElements.play.setAttribute(
     "aria-label",
     playing ? "Pause" : "Play"
 );
+document.querySelectorAll("[data-pause-music]").forEach(button => {
+    button.textContent = playing ? "Ⅱ" : "▶";
+    button.title = playing ? "Pause" : "Play";
+    button.setAttribute("aria-label", playing ? "Pause" : "Play");
+});
 
 }
 
@@ -1414,12 +1419,7 @@ function renderMusicCollection() {
             : `<button class="track-icon-btn" type="button" disabled title="Preparing download" aria-label="Preparing download">⇩</button>`;
         const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
             <div class="music-card-controls compact-track-controls">
-                ${isExpandedPlayer ? `
-                    <button class="track-icon-btn" type="button" data-prev-music="${id}" ${previousId ? "" : "disabled"} title="Previous" aria-label="Previous">⏮</button>
-                    <button class="track-icon-btn track-play-btn" type="button" data-pause-music="${id}" title="${audioElement && !audioElement.paused ? "Pause" : "Play"}" aria-label="${audioElement && !audioElement.paused ? "Pause" : "Play"}">${audioElement && !audioElement.paused ? "Ⅱ" : "▶"}</button>
-                    <button class="track-icon-btn" type="button" data-next-music="${id}" ${nextId ? "" : "disabled"} title="Next" aria-label="Next">⏭</button>
-                    ${downloadControl}
-                ` : `
+                ${isExpandedPlayer ? '<span class="inline-playing-badge">NOW PLAYING</span>' : `
                     <button class="track-icon-btn track-play-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"} title="Play" aria-label="Play">${localAudioReady ? "▶" : "… "}</button>
                     ${downloadControl}
                 `}

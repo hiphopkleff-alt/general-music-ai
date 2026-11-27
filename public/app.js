@@ -1594,7 +1594,7 @@ function renderMusicCollection() {
                             ${downloadControl}
                         </div>
                     </section>` : ""}
-                <details class="compact-track-more">
+                <details class="compact-track-more" name="music-track-details">
                     <summary title="Track options" aria-label="Track options">•••</summary>
                     <div class="compact-track-options">
                         <span class="music-track-type">${song.type === "imported" ? "IMPORTED AUDIO" : song.type === "instrumental" ? "AI INSTRUMENTAL" : "FULL AI SONG"} · ${escapeHTML(status)}</span>

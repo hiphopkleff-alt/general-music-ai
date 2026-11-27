@@ -57,7 +57,76 @@ const audioElement = document.getElementById("globalAudio");
 let currentTrackId = null;
 let playerPlaylist = [];
 let currentTrackIndex = -1;
+const PLAYBACK_QUEUE_KEY = "gtp_music_playback_queue_v1";
 let playbackQueueIds = null;
+try {
+    const savedQueue = JSON.parse(localStorage.getItem(PLAYBACK_QUEUE_KEY) || "null");
+    if (Array.isArray(savedQueue)) playbackQueueIds = savedQueue.map(String);
+} catch (error) { playbackQueueIds = null; }
+
+function savePlaybackQueue() {
+    try {
+        if (Array.isArray(playbackQueueIds)) localStorage.setItem(PLAYBACK_QUEUE_KEY, JSON.stringify(playbackQueueIds));
+        else localStorage.removeItem(PLAYBACK_QUEUE_KEY);
+    } catch (error) { console.warn("Unable to save playback queue:", error); }
+}
+function renderPlaybackQueue() {
+    let panel = document.getElementById("playbackQueuePanel");
+    if (!panel) {
+        panel = document.createElement("section");
+        panel.id = "playbackQueuePanel";
+        panel.className = "playback-queue-panel";
+        panel.hidden = true;
+        panel.setAttribute("aria-label", "Playback queue");
+        document.body.appendChild(panel);
+    }
+    refreshPlaylist();
+    const tracks = playerPlaylist;
+    const currentIndex = tracks.findIndex(track => String(track.id) === String(currentTrackId));
+    const upcoming = tracks.filter(track => String(track.id) !== String(currentTrackId));
+    panel.innerHTML = `
+        <div class="playback-queue-head">
+            <div><span class="queue-kicker">GENERAL MUSIC AI</span><h3>PLAYBACK QUEUE <small>${upcoming.length} UPCOMING</small></h3></div>
+            <button type="button" class="queue-close" data-queue-close aria-label="Close queue">✕</button>
+        </div>
+        <div class="queue-current"><span class="queue-current-label">NOW PLAYING</span><strong>${escapeHTML((tracks.find(track => String(track.id) === String(currentTrackId)) || {}).title || "Nothing playing")}</strong></div>
+        <div class="queue-list">
+        ${upcoming.length ? upcoming.map((track,index) => {
+            const id=String(track.id), actualIndex=tracks.findIndex(item=>String(item.id)===id);
+            return `<article class="queue-track-row">
+                <span class="queue-position">${index+1}</span>
+                <button type="button" class="queue-track-play" data-queue-play="${escapeHTML(id)}" aria-label="Play track">▶</button>
+                <div class="queue-track-copy"><strong>${escapeHTML(track.title||"Untitled Song")}</strong><small>${escapeHTML(track.artistName||"Unknown artist")}</small></div>
+                <div class="queue-row-actions">
+                    <button type="button" data-queue-up="${escapeHTML(id)}" ${actualIndex <= (currentIndex>=0?currentIndex+1:0)?"disabled":""} aria-label="Move up">↑</button>
+                    <button type="button" data-queue-down="${escapeHTML(id)}" ${actualIndex>=tracks.length-1?"disabled":""} aria-label="Move down">↓</button>
+                    <button type="button" data-queue-remove="${escapeHTML(id)}" aria-label="Remove from queue">✕</button>
+                </div></article>`;
+        }).join("") : '<p class="queue-empty">No upcoming songs. Add tracks from MY MUSIC.</p>'}
+        </div>
+        <div class="queue-footer"><button type="button" class="queue-clear" data-queue-clear>CLEAR UPCOMING</button></div>`;
+    const badge=document.getElementById("queueToggle");
+    if(badge) badge.dataset.count=String(upcoming.length);
+    return panel;
+}
+function openPlaybackQueue(){const panel=renderPlaybackQueue();panel.hidden=false;panel.classList.add("is-open");}
+function closePlaybackQueue(){const panel=document.getElementById("playbackQueuePanel");if(panel){panel.classList.remove("is-open");panel.hidden=true;}}
+function addTrackToQueue(trackId, playNext=false){
+    const id=String(trackId), playable=getSavedTasks().filter(hasPlayableAudio).map(track=>String(track.id));
+    if(!playable.includes(id)) return false;
+    let queue=Array.isArray(playbackQueueIds)?playbackQueueIds.filter(item=>playable.includes(String(item))):playable;
+    queue=queue.filter(item=>String(item)!==id);
+    if(playNext){const index=queue.findIndex(item=>String(item)===String(currentTrackId));queue.splice(index>=0?index+1:0,0,id);}
+    else queue.push(id);
+    playbackQueueIds=queue;savePlaybackQueue();refreshPlaylist();renderPlaybackQueue();return true;
+}
+function moveQueueTrack(trackId,direction){
+    refreshPlaylist();const queue=playerPlaylist.map(track=>String(track.id));
+    const index=queue.indexOf(String(trackId)),target=index+direction,currentIndex=queue.indexOf(String(currentTrackId));
+    if(index<0||target<0||target>=queue.length||String(trackId)===String(currentTrackId)||(direction<0&&currentIndex>=0&&target<=currentIndex))return;
+    [queue[index],queue[target]]=[queue[target],queue[index]];
+    playbackQueueIds=queue;savePlaybackQueue();renderPlaybackQueue();
+}
 
 /* ==========================================
 SAFE STORAGE HELPERS
@@ -385,6 +454,7 @@ if (!audioURL) {
 
 currentTrackId = track.id;
 currentTrackIndex = index;
+renderPlaybackQueue();
 
 if (currentPage === "nowplaying") renderNowPlayingPage();
 updatePlayerInformation(track);
@@ -1540,6 +1610,8 @@ function renderMusicCollection() {
                             <label class="collection-action-btn cover-upload-label" for="coverUpload_${id}">${song.coverImage ? "Change cover" : "Upload cover"}</label>
                             <input class="music-cover-input" id="coverUpload_${id}" type="file" accept="image/jpeg,image/png,image/webp" data-cover-upload="${id}">
                             <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ Favorited" : "♡ Add to favorites"}</button>
+                            <button type="button" class="collection-action-btn" data-queue-add="${id}">＋ Add to queue</button>
+                            <button type="button" class="collection-action-btn" data-queue-next="${id}">⏭ Play next</button>
                             <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ Add to playlist</button>
                             ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">Remove from playlist</button><button type="button" class="collection-action-btn" data-playlist-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-playlist-move-down="' + id + '">↓ Move down</button>' : ""}
                             <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ Add to album</button>
@@ -1728,6 +1800,22 @@ document.addEventListener("input", event => {
 
 document.addEventListener("click", async event => {
 
+if(event.target.closest("#queueToggle")){event.preventDefault();openPlaybackQueue();return;}
+if(event.target.closest("[data-queue-close]")){closePlaybackQueue();return;}
+const qAdd=event.target.closest("[data-queue-add]");
+if(qAdd){event.preventDefault();addTrackToQueue(qAdd.dataset.queueAdd,false);qAdd.textContent="✓ Added to queue";return;}
+const qNext=event.target.closest("[data-queue-next]");
+if(qNext){event.preventDefault();addTrackToQueue(qNext.dataset.queueNext,true);qNext.textContent="✓ Playing next";return;}
+const qPlay=event.target.closest("[data-queue-play]");
+if(qPlay){event.preventDefault();await playTrack(qPlay.dataset.queuePlay);renderPlaybackQueue();updatePlayButton();return;}
+const qUp=event.target.closest("[data-queue-up]");
+if(qUp){event.preventDefault();moveQueueTrack(qUp.dataset.queueUp,-1);return;}
+const qDown=event.target.closest("[data-queue-down]");
+if(qDown){event.preventDefault();moveQueueTrack(qDown.dataset.queueDown,1);return;}
+const qRemove=event.target.closest("[data-queue-remove]");
+if(qRemove){event.preventDefault();if(String(qRemove.dataset.queueRemove)===String(currentTrackId))return;refreshPlaylist();playbackQueueIds=playerPlaylist.map(t=>String(t.id)).filter(id=>id!==String(qRemove.dataset.queueRemove));savePlaybackQueue();renderPlaybackQueue();return;}
+if(event.target.closest("[data-queue-clear]")){playbackQueueIds=currentTrackId?[String(currentTrackId)]:[];savePlaybackQueue();refreshPlaylist();renderPlaybackQueue();return;}
+
 const miniPlayer = event.target.closest(".player .now-playing");
 if (miniPlayer && currentTrackId) { event.preventDefault(); if (currentPage !== "nowplaying") { nowPlayingReturnPage = currentPage; nowPlayingReturnScrollY = window.scrollY || window.pageYOffset || 0; } navigate("nowplaying"); return; }
 const fullPlayerArtwork = event.target.closest(".full-player-art");
@@ -1764,10 +1852,12 @@ if (playButton) {
 
     if (collectionMode === "album" && activeAlbumId) {
         const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
-        playbackQueueIds = album ? [...album.trackIds] : null;
+        playbackQueueIds = album ? [...album.trackIds].map(String) : null;
+        savePlaybackQueue();
     } else if (collectionMode === "playlist" && activePlaylistId) {
         const playlist = getCustomPlaylists().find(item => String(item.id) === String(activePlaylistId));
-        playbackQueueIds = playlist ? [...playlist.trackIds] : null;
+        playbackQueueIds = playlist ? [...playlist.trackIds].map(String) : null;
+        savePlaybackQueue();
     } else {
         playbackQueueIds = null;
     }
@@ -1813,7 +1903,8 @@ if (previousInlineButton) {
     const id = String(previousInlineButton.dataset.prevMusic);
     const visibleIds = sortedTrackIdsForInlinePlayer(id);
     if (visibleIds.length) {
-        playbackQueueIds = visibleIds;
+        playbackQueueIds = visibleIds.map(String);
+        savePlaybackQueue();
         refreshPlaylist();
         await playPreviousTrack();
         renderMusicCollection();
@@ -1827,7 +1918,8 @@ if (nextInlineButton) {
     const id = String(nextInlineButton.dataset.nextMusic);
     const visibleIds = sortedTrackIdsForInlinePlayer(id);
     if (visibleIds.length) {
-        playbackQueueIds = visibleIds;
+        playbackQueueIds = visibleIds.map(String);
+        savePlaybackQueue();
         refreshPlaylist();
         await playNextTrack();
         renderMusicCollection();
@@ -1852,7 +1944,8 @@ if (playAlbumButton || shuffleAlbumButton) {
             [playableIds[i], playableIds[j]] = [playableIds[j], playableIds[i]];
         }
     }
-    playbackQueueIds = playableIds;
+    playbackQueueIds = playableIds.map(String);
+    savePlaybackQueue();
     await playTrack(playableIds[0]);
     renderMusicCollection();
     return;
@@ -2008,7 +2101,8 @@ if (playPlaylistButton || shufflePlaylistButton) {
     let playableIds = playlist ? (playlist.trackIds || []).filter(id => getSavedTasks().some(track => String(track.id) === String(id) && hasPlayableAudio(track))) : [];
     if (!playableIds.length) { alert("This playlist has no playable tracks yet."); return; }
     if (shufflePlaylistButton) playableIds = playableIds.slice().sort(() => Math.random() - 0.5);
-    playbackQueueIds = playableIds;
+    playbackQueueIds = playableIds.map(String);
+    savePlaybackQueue();
     recordRecentlyPlayed(playableIds[0]);
     await playTrack(playableIds[0]);
     return;
@@ -3541,6 +3635,7 @@ window.addEventListener("popstate", () => {
 
 initializeGlobalPlayer();
 initializeGlobalSearch();
+renderPlaybackQueue();
 
 // Restore the last selected track after a full-page navigation.
 // Browsers stop audio during document navigation, so playback resumes paused

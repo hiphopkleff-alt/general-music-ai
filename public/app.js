@@ -1379,7 +1379,7 @@ function renderMusicCollection() {
                     <p><strong>Artist:</strong> ${escapeHTML(song.artistName || "Not set")}</p>
                     <p><strong>Album:</strong> ${escapeHTML(song.albumName || "Single")}</p>
                     <p><strong>Genre:</strong> ${escapeHTML(song.genre || song.musicStyle || "Not set")}</p>
-                    <p><strong>Duration:</strong> ${song.durationSeconds ? formatTime(song.durationSeconds) : "Not detected yet"}</p>
+                    <p><strong>Duration:</strong> <span data-track-duration="${id}">${song.durationSeconds ? formatTime(song.durationSeconds) : "Not detected yet"}</span></p>
                     <p><strong>Created:</strong> ${song.createdAt ? escapeHTML(new Date(song.createdAt).toLocaleDateString()) : "Date unavailable"}</p>
                 </div>
                 <details class="track-metadata-editor">
@@ -1465,7 +1465,12 @@ function detectTrackDuration(trackId, audioURL) {
         if (track && !track.durationSeconds) {
             track.durationSeconds = Math.round(probe.duration);
             saveTasks(tasks);
-            renderMusicCollection();
+            // Update only the duration label. Re-rendering the whole collection
+            // here was rebuilding the tapped button/card while audio metadata loaded.
+            const durationLabel = document.querySelector(
+                '[data-track-duration="' + String(trackId).replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"]'
+            );
+            if (durationLabel) durationLabel.textContent = formatTime(track.durationSeconds);
         }
         probe.src = "";
     }, { once: true });

@@ -48,6 +48,7 @@ const audioElement = document.getElementById("globalAudio");
 let currentTrackId = null;
 let playerPlaylist = [];
 let currentTrackIndex = -1;
+let playbackQueueIds = null;
 
 /* ==========================================
 SAFE STORAGE HELPERS
@@ -264,18 +265,18 @@ if (playerElements.cover) {
 }
 
 function refreshPlaylist() {
-playerPlaylist = getSavedTasks().filter(task => {
-return Boolean(safeAudioURL(task.audioUrl));
-});
-
-if (currentTrackId) {
-    currentTrackIndex = playerPlaylist.findIndex(
-        task => task.id === currentTrackId
-    );
+const playableTasks = getSavedTasks().filter(task => Boolean(safeAudioURL(task.audioUrl)));
+if (Array.isArray(playbackQueueIds)) {
+    const byId = new Map(playableTasks.map(task => [String(task.id), task]));
+    playerPlaylist = playbackQueueIds.map(id => byId.get(String(id))).filter(Boolean);
+} else {
+    playerPlaylist = playableTasks;
 }
 
+if (currentTrackId) {
+    currentTrackIndex = playerPlaylist.findIndex(task => String(task.id) === String(currentTrackId));
+}
 return playerPlaylist;
-
 }
 
 /* ==========================================
@@ -1294,7 +1295,8 @@ function renderMusicCollection() {
         if (!album) { collectionMode = "albums"; activeAlbumId = null; renderMusicCollection(); return; }
         albumHeaderMarkup = '<section class="album-detail-header">' +
             (album.coverImage ? '<div class="album-detail-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></div>' : '<div class="album-detail-cover album-placeholder">💿</div>') +
-            '<div><span class="album-kicker">ALBUM</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p></div></section>';
+            '<div class="album-detail-copy"><span class="album-kicker">ALBUM</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p>' +
+            '<div class="album-playback-actions"><button type="button" class="primary-btn" data-play-album="' + escapeHTML(album.id) + '">▶ PLAY ALBUM</button><button type="button" class="collection-action-btn" data-shuffle-album="' + escapeHTML(album.id) + '">🔀 SHUFFLE</button></div></div></section>';
     }
 
     if (collectionMode === "playlists" && !activePlaylistId) {
@@ -1491,8 +1493,37 @@ if (metadataButton) {
 const playButton = event.target.closest("[data-play-music]");
 
 if (playButton) {
+    if (collectionMode === "album" && activeAlbumId) {
+        const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
+        playbackQueueIds = album ? [...album.trackIds] : null;
+    } else {
+        playbackQueueIds = null;
+    }
     recordRecentlyPlayed(playButton.dataset.playMusic);
     await playTrack(playButton.dataset.playMusic);
+    renderMusicCollection();
+    return;
+}
+
+const playAlbumButton = event.target.closest("[data-play-album]");
+const shuffleAlbumButton = event.target.closest("[data-shuffle-album]");
+if (playAlbumButton || shuffleAlbumButton) {
+    const button = playAlbumButton || shuffleAlbumButton;
+    const album = getMusicAlbums().find(item => String(item.id) === String(button.dataset.playAlbum || button.dataset.shuffleAlbum));
+    if (!album) return;
+    const playableIds = album.trackIds.filter(id => getSavedTasks().some(track => String(track.id) === String(id) && Boolean(safeAudioURL(track.audioUrl))));
+    if (!playableIds.length) {
+        alert("This album has no playable tracks yet.");
+        return;
+    }
+    if (shuffleAlbumButton) {
+        for (let i = playableIds.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [playableIds[i], playableIds[j]] = [playableIds[j], playableIds[i]];
+        }
+    }
+    playbackQueueIds = playableIds;
+    await playTrack(playableIds[0]);
     renderMusicCollection();
     return;
 }

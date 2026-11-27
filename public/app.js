@@ -1137,154 +1137,160 @@ settings: `
 };
 
 /* ==========================================
-MUSIC COLLECTION RENDERING
+MUSIC COLLECTION: FAVORITES + PLAYLISTS
 ========================================== */
 
-function renderMusicCollection() {
-const collection = document.getElementById("musicCollection");
+const FAVORITES_KEY = "gtp_music_favorites_v1";
+const PLAYLISTS_KEY = "gtp_music_playlists_v1";
+const RECENT_KEY = "gtp_music_recent_v1";
+let collectionMode = "all";
+let activePlaylistId = null;
 
-if (!collection) return;
-
-const savedTasks = getSavedTasks();
-
-const searchInput = document.getElementById("globalSearch");
-
-const searchTerm = searchInput
-    ? searchInput.value.trim().toLowerCase()
-    : "";
-
-const filteredTasks = savedTasks.filter(song => {
-    const title = String(song.title || "").toLowerCase();
-    const type = String(song.type || "").toLowerCase();
-
-    return (
-        title.includes(searchTerm) ||
-        type.includes(searchTerm)
-    );
-});
-
-if (filteredTasks.length === 0) {
-    collection.innerHTML = `
-
-        <div class="empty-state">
-
-            <div>🎼</div>
-
-            <h3>
-                ${savedTasks.length
-                    ? "No matching music found"
-                    : "Your music collection is empty"
-                }
-            </h3>
-
-            <p>
-                ${savedTasks.length
-                    ? "Try another search."
-                    : "Your generated songs will appear here."
-                }
-            </p>
-
-        </div>
-
-    `;
-
-    return;
+function readCollectionData(key, fallback) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+        return Array.isArray(value) ? value : fallback;
+    } catch (error) {
+        console.warn("Music collection storage error:", error);
+        return fallback;
+    }
 }
 
-collection.innerHTML = filteredTasks.map(song => {
-    const title = escapeHTML(song.title || "Untitled Song");
-    const id = escapeHTML(song.id);
-    const status = escapeHTML(song.status || "preparing");
+function getFavorites() {
+    return readCollectionData(FAVORITES_KEY, []);
+}
 
-    const playableURL = safeAudioURL(song.audioUrl);
+function saveFavorites(items) {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...new Set(items.map(String))]));
+}
 
-    const isCurrentTrack =
-        String(currentTrackId) === String(song.id);
+function getCustomPlaylists() {
+    return readCollectionData(PLAYLISTS_KEY, []);
+}
 
-    let audioControls = "";
+function saveCustomPlaylists(items) {
+    localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(items));
+}
 
-    if (playableURL) {
-        audioControls = `
+function getRecentlyPlayed() {
+    return readCollectionData(RECENT_KEY, []);
+}
 
-            <div class="music-card-controls">
+function recordRecentlyPlayed(trackId) {
+    const recent = getRecentlyPlayed().filter(id => String(id) !== String(trackId));
+    recent.unshift(String(trackId));
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
+}
 
-                <button
-                    class="primary-btn"
-                    type="button"
-                    data-play-music="${id}"
-                >
-                    ${isCurrentTrack && audioElement && !audioElement.paused
-                        ? "▶ NOW PLAYING"
-                        : "▶ PLAY TRACK"
-                    }
-                </button>
+function isFavorite(trackId) {
+    return getFavorites().includes(String(trackId));
+}
 
-                <a
-                    class="primary-btn"
-                    href="${escapeHTML(playableURL)}"
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-download-music="${id}"
-                >
-                    ⬇️ DOWNLOAD
-                </a>
+function renderMusicCollection() {
+    const collection = document.getElementById("musicCollection");
+    if (!collection) return;
 
-            </div>
+    const savedTasks = getSavedTasks();
+    const playlists = getCustomPlaylists();
+    const favorites = getFavorites();
+    const recent = getRecentlyPlayed();
+    const searchInput = document.getElementById("globalSearch");
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : "";
 
-        `;
-    } else {
-        audioControls = `
-            <p>
-                🎧 Audio will appear here when generation succeeds.
-            </p>
-        `;
+    let visibleTasks = savedTasks;
+    if (collectionMode === "favorites") {
+        visibleTasks = savedTasks.filter(song => favorites.includes(String(song.id)));
+    } else if (collectionMode === "recent") {
+        visibleTasks = recent.map(id => savedTasks.find(song => String(song.id) === String(id))).filter(Boolean);
+    } else if (collectionMode === "playlist") {
+        const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
+        visibleTasks = playlist ? playlist.trackIds.map(id => savedTasks.find(song => String(song.id) === String(id))).filter(Boolean) : [];
     }
 
-    return `
+    const filteredTasks = visibleTasks.filter(song => {
+        const title = String(song.title || "").toLowerCase();
+        const type = String(song.type || "").toLowerCase();
+        return title.includes(searchTerm) || type.includes(searchTerm);
+    });
 
-        <div class="tool-card music-track-card">
+    const playlistOptions = playlists.map(item =>
+        '<option value="' + escapeHTML(item.id) + '">' + escapeHTML(item.name) + '</option>'
+    ).join("");
 
-            <h3>🎵 ${title}</h3>
+    const tabs = [
+        ["all", "ALL TRACKS"],
+        ["favorites", "♥ FAVORITES"],
+        ["recent", "RECENTLY PLAYED"],
+        ["playlists", "PLAYLISTS"]
+    ];
 
-            <p style="color:#38d8ff;font-weight:bold;">
-
-                ${song.type === "instrumental"
-                    ? "🎹 AI INSTRUMENTAL"
-                    : "🎤 FULL AI SONG"
-                }
-
-            </p>
-
-            <p>Status: ${status}</p>
-
-            ${audioControls}
-
-            <p style="
-                font-size:12px;
-                opacity:0.7;
-                word-break:break-all;
-            ">
-                Task ID: ${id}
-            </p>
-
-            <button
-                class="primary-btn"
-                type="button"
-                data-delete-music="${id}"
-                style="
-                    margin-top:15px;
-                    background:#ff4757;
-                "
-            >
-                🗑️ DELETE TRACK
-            </button>
-
+    const toolbar = `
+        <div class="collection-toolbar">
+            <div class="collection-tabs">
+                ${tabs.map(([mode, label]) => `
+                    <button type="button" class="collection-tab ${collectionMode === mode || (mode === "playlists" && collectionMode === "playlist") ? "active" : ""}" data-collection-mode="${mode}">${label}</button>
+                `).join("")}
+            </div>
+            <div class="collection-playlist-actions">
+                <button type="button" class="primary-btn" data-create-playlist>＋ CREATE PLAYLIST</button>
+            </div>
+            ${collectionMode === "playlists" || collectionMode === "playlist" ? `
+                <div class="collection-playlist-list">
+                    ${playlists.length ? playlists.map(item => `
+                        <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${escapeHTML(item.name)} <small>${item.trackIds.length}</small></button>
+                    `).join("") : '<p class="collection-muted">Create a playlist to organise your music.</p>'}
+                </div>
+            ` : ""}
         </div>
-
     `;
-}).join("");
 
+    if (collectionMode === "playlists" && !activePlaylistId) {
+        collection.innerHTML = toolbar + (playlists.length
+            ? '<div class="collection-muted">Choose a playlist above to view its tracks.</div>'
+            : '<div class="empty-state"><div>🎧</div><h3>No playlists yet</h3><p>Create your first playlist to organise your songs.</p></div>');
+        return;
+    }
+
+    if (filteredTasks.length === 0) {
+        collection.innerHTML = toolbar + `
+            <div class="empty-state">
+                <div>🎼</div>
+                <h3>${savedTasks.length ? "No music found in this view" : "Your music collection is empty"}</h3>
+                <p>${savedTasks.length ? "Try another collection tab or search." : "Your generated songs will appear here."}</p>
+            </div>`;
+        return;
+    }
+
+    const cards = filteredTasks.map(song => {
+        const title = escapeHTML(song.title || "Untitled Song");
+        const id = escapeHTML(song.id);
+        const status = escapeHTML(song.status || "preparing");
+        const playableURL = safeAudioURL(song.audioUrl);
+        const favorite = favorites.includes(String(song.id));
+        const isCurrentTrack = String(currentTrackId) === String(song.id);
+        const controls = playableURL ? `
+            <div class="music-card-controls">
+                <button class="primary-btn" type="button" data-play-music="${id}">${isCurrentTrack && audioElement && !audioElement.paused ? "▶ NOW PLAYING" : "▶ PLAY TRACK"}</button>
+                <a class="primary-btn" href="${escapeHTML(playableURL)}" download target="_blank" rel="noopener noreferrer" data-download-music="${id}">⬇️ DOWNLOAD</a>
+            </div>` : '<p>🎧 Audio will appear here when generation succeeds.</p>';
+
+        return `
+            <div class="tool-card music-track-card">
+                <h3>🎵 ${title}</h3>
+                <p class="music-track-type">${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
+                <p>Status: ${status}</p>
+                ${controls}
+                <div class="music-card-actions">
+                    <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ FAVORITED" : "♡ ADD TO FAVORITES"}</button>
+                    <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ ADD TO PLAYLIST</button>
+                    ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">REMOVE FROM PLAYLIST</button>' : ""}
+                </div>
+                <p class="music-task-id">Task ID: ${id}</p>
+                <button class="primary-btn" type="button" data-delete-music="${id}" style="margin-top:12px;background:#ff4757;">🗑️ DELETE TRACK</button>
+            </div>`;
+    }).join("");
+
+    collection.innerHTML = toolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
 
 /* ==========================================
@@ -1313,8 +1319,82 @@ document.addEventListener("click", async event => {
 const playButton = event.target.closest("[data-play-music]");
 
 if (playButton) {
+    recordRecentlyPlayed(playButton.dataset.playMusic);
     await playTrack(playButton.dataset.playMusic);
     renderMusicCollection();
+    return;
+}
+
+const modeButton = event.target.closest("[data-collection-mode]");
+if (modeButton) {
+    collectionMode = modeButton.dataset.collectionMode;
+    activePlaylistId = null;
+    renderMusicCollection();
+    return;
+}
+
+const playlistButton = event.target.closest("[data-open-playlist]");
+if (playlistButton) {
+    activePlaylistId = playlistButton.dataset.openPlaylist;
+    collectionMode = "playlist";
+    renderMusicCollection();
+    return;
+}
+
+const createPlaylistButton = event.target.closest("[data-create-playlist]");
+if (createPlaylistButton) {
+    const name = prompt("Enter a name for your new playlist:");
+    if (name && name.trim()) {
+        const playlists = getCustomPlaylists();
+        playlists.push({ id: "playlist_" + Date.now(), name: name.trim().slice(0, 50), trackIds: [] });
+        saveCustomPlaylists(playlists);
+        collectionMode = "playlists";
+        activePlaylistId = null;
+        renderMusicCollection();
+    }
+    return;
+}
+
+const favoriteButton = event.target.closest("[data-toggle-favorite]");
+if (favoriteButton) {
+    const id = String(favoriteButton.dataset.toggleFavorite);
+    const favorites = getFavorites();
+    saveFavorites(favorites.includes(id) ? favorites.filter(item => item !== id) : [...favorites, id]);
+    renderMusicCollection();
+    return;
+}
+
+const addToPlaylistButton = event.target.closest("[data-add-to-playlist]");
+if (addToPlaylistButton) {
+    const playlists = getCustomPlaylists();
+    if (!playlists.length) {
+        alert("Create a playlist first, then add tracks to it.");
+        return;
+    }
+    const choices = playlists.map((item, index) => (index + 1) + ". " + item.name).join("\\n");
+    const answer = prompt("Choose a playlist number:\\n" + choices);
+    const index = Number(answer) - 1;
+    if (answer !== null && Number.isInteger(index) && playlists[index]) {
+        const ids = playlists[index].trackIds || [];
+        if (!ids.some(item => String(item) === String(addToPlaylistButton.dataset.addToPlaylist))) {
+            ids.push(String(addToPlaylistButton.dataset.addToPlaylist));
+        }
+        playlists[index].trackIds = ids;
+        saveCustomPlaylists(playlists);
+        renderMusicCollection();
+    }
+    return;
+}
+
+const removeFromPlaylistButton = event.target.closest("[data-remove-from-playlist]");
+if (removeFromPlaylistButton) {
+    const playlists = getCustomPlaylists();
+    const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
+    if (playlist) {
+        playlist.trackIds = playlist.trackIds.filter(id => String(id) !== String(removeFromPlaylistButton.dataset.removeFromPlaylist));
+        saveCustomPlaylists(playlists);
+        renderMusicCollection();
+    }
     return;
 }
 
@@ -1360,6 +1440,15 @@ if (String(currentTrackId) === String(id)) {
     updatePlayerProgress();
     updatePlayButton();
 }
+
+saveFavorites(getFavorites().filter(item => item !== String(id)));
+const recentTracks = getRecentlyPlayed().filter(item => item !== String(id));
+localStorage.setItem(RECENT_KEY, JSON.stringify(recentTracks));
+const playlistsAfterDelete = getCustomPlaylists().map(item => ({
+    ...item,
+    trackIds: (item.trackIds || []).filter(trackId => String(trackId) !== String(id))
+}));
+saveCustomPlaylists(playlistsAfterDelete);
 
 const tasks = getSavedTasks().filter(
     song => String(song.id) !== String(id)

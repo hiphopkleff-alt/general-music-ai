@@ -37,6 +37,12 @@ const pageTitles = {
     nowplaying: "NOW PLAYING"
 };
 
+const PLAYBACK_MODE_KEY = "gtp_music_playback_mode_v1";
+const SHUFFLE_KEY = "gtp_music_shuffle_v1";
+let repeatMode = localStorage.getItem(PLAYBACK_MODE_KEY) || "off";
+if (!["off", "all", "one"].includes(repeatMode)) repeatMode = "off";
+let shuffleEnabled = localStorage.getItem(SHUFFLE_KEY) === "true";
+
 const STORAGE_KEY = "gtp_music_tasks";
 const DOWNLOAD_KEY = "gtp_music_downloads";
 const PLAYER_VOLUME_KEY = "gtp_music_volume";
@@ -447,10 +453,29 @@ async function playNextTrack() {
     refreshPlaylist();
     if (!playerPlaylist.length) return;
 
+    if (repeatMode === "one" && audioElement && audioElement.ended) {
+        audioElement.currentTime = 0;
+        await audioElement.play();
+        return;
+    }
+
     const currentIndex = playerPlaylist.findIndex(
         track => String(track.id) === String(currentTrackId)
     );
-    const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % playerPlaylist.length;
+    let nextIndex;
+    if (shuffleEnabled && playerPlaylist.length > 1) {
+        const choices = playerPlaylist.map((_, index) => index).filter(index => index !== currentIndex);
+        nextIndex = choices[Math.floor(Math.random() * choices.length)];
+    } else if (currentIndex < 0) {
+        nextIndex = 0;
+    } else if (currentIndex + 1 < playerPlaylist.length) {
+        nextIndex = currentIndex + 1;
+    } else if (repeatMode === "all") {
+        nextIndex = 0;
+    } else {
+        if (audioElement && !audioElement.ended) audioElement.pause();
+        return;
+    }
     await playTrack(playerPlaylist[nextIndex].id);
 }
 
@@ -513,6 +538,33 @@ if (playerElements.volume) {
     });
 }
 
+const shuffleControl = document.getElementById("shuffleToggle");
+const repeatControl = document.getElementById("repeatToggle");
+function updatePlaybackModeControls() {
+    if (shuffleControl) {
+        shuffleControl.classList.toggle("is-active", shuffleEnabled);
+        shuffleControl.setAttribute("aria-pressed", String(shuffleEnabled));
+        shuffleControl.title = shuffleEnabled ? "Shuffle on" : "Shuffle off";
+    }
+    if (repeatControl) {
+        repeatControl.classList.toggle("is-active", repeatMode !== "off");
+        repeatControl.textContent = repeatMode === "one" ? "🔂" : "🔁";
+        repeatControl.setAttribute("aria-pressed", String(repeatMode !== "off"));
+        repeatControl.title = repeatMode === "off" ? "Repeat off" : repeatMode === "all" ? "Repeat all" : "Repeat one";
+    }
+}
+if (shuffleControl) shuffleControl.addEventListener("click", () => {
+    shuffleEnabled = !shuffleEnabled;
+    localStorage.setItem(SHUFFLE_KEY, String(shuffleEnabled));
+    updatePlaybackModeControls();
+});
+if (repeatControl) repeatControl.addEventListener("click", () => {
+    repeatMode = repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off";
+    localStorage.setItem(PLAYBACK_MODE_KEY, repeatMode);
+    updatePlaybackModeControls();
+});
+updatePlaybackModeControls();
+
 if (playerElements.play) {
     playerElements.play.addEventListener(
         "click",
@@ -564,8 +616,15 @@ audioElement.addEventListener("play", updatePlayButton);
 audioElement.addEventListener("pause", updatePlayButton);
 
 audioElement.addEventListener("ended", () => {
-    if (localStorage.getItem(AUTOPLAY_NEXT_KEY) !== "false") {
+    if (repeatMode === "one") {
+        audioElement.currentTime = 0;
+        audioElement.play().catch(error => console.error("Repeat playback error:", error));
+        return;
+    }
+    if (repeatMode === "all" || playerPlaylist.findIndex(track => String(track.id) === String(currentTrackId)) < playerPlaylist.length - 1) {
         playNextTrack();
+    } else {
+        updatePlayButton();
     }
 });
 

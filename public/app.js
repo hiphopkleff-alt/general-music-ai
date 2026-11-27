@@ -1391,63 +1391,59 @@ function renderMusicCollection() {
         const previousId = currentQueueIndex > 0 ? playableIds[currentQueueIndex - 1] : (playableIds.length > 1 ? playableIds[playableIds.length - 1] : "");
         const nextId = currentQueueIndex >= 0 && playableIds.length > 1 ? playableIds[(currentQueueIndex + 1) % playableIds.length] : "";
         const downloadControl = playableURL
-            ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}">⬇️ DOWNLOAD</a>`
-            : `<button class="primary-btn" type="button" disabled>PREPARING DOWNLOAD...</button>`;
+            ? `<a class="track-icon-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}" title="Download" aria-label="Download">⇩</a>`
+            : `<button class="track-icon-btn" type="button" disabled title="Preparing download" aria-label="Preparing download">⇩</button>`;
         const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
-            <div class="music-card-controls">
+            <div class="music-card-controls compact-track-controls">
                 ${isExpandedPlayer ? `
-                    <div class="inline-track-player">
-                        <div class="inline-player-heading">🎧 NOW PLAYING</div>
-                        <strong>${escapeHTML(song.artistName || "Unknown Artist")} — ${title}</strong>
-                        <div class="inline-player-controls">
-                            <button class="primary-btn" type="button" data-prev-music="${id}" ${previousId ? "" : "disabled"}>⏮ PREVIOUS</button>
-                            <button class="primary-btn" type="button" data-pause-music="${id}">${audioElement && !audioElement.paused ? "⏸ PAUSE" : "▶ RESUME"}</button>
-                            <button class="primary-btn" type="button" data-next-music="${id}" ${nextId ? "" : "disabled"}>⏭ NEXT</button>
-                            ${downloadControl}
-                        </div>
-                    </div>` : `
-                    <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? "▶ PLAY" : "PREPARING AUDIO..."}</button>
+                    <button class="track-icon-btn" type="button" data-prev-music="${id}" ${previousId ? "" : "disabled"} title="Previous" aria-label="Previous">⏮</button>
+                    <button class="track-icon-btn track-play-btn" type="button" data-pause-music="${id}" title="${audioElement && !audioElement.paused ? "Pause" : "Play"}" aria-label="${audioElement && !audioElement.paused ? "Pause" : "Play"}">${audioElement && !audioElement.paused ? "Ⅱ" : "▶"}</button>
+                    <button class="track-icon-btn" type="button" data-next-music="${id}" ${nextId ? "" : "disabled"} title="Next" aria-label="Next">⏭</button>
+                    ${downloadControl}
+                ` : `
+                    <button class="track-icon-btn track-play-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"} title="Play" aria-label="Play">${localAudioReady ? "▶" : "… "}</button>
                     ${downloadControl}
                 `}
-            </div>` : '<p>🎧 Audio will appear here when generation succeeds or you import a file.</p>';
+            </div>` : '<span class="track-unavailable">Audio not ready</span>';
 
         const coverMarkup = song.coverImage
-            ? '<div class="music-cover-art has-image" style="background-image:url(&quot;' + escapeHTML(song.coverImage) + '&quot;)"></div>'
-            : '<div class="music-cover-art generated-cover ' + (song.type === "instrumental" ? "instrumental-cover" : "song-cover") + '><span>' + (song.type === "instrumental" ? "🎹" : "🎤") + '</span><small>GENERAL MUSIC AI</small></div>';
+            ? '<span class="compact-track-cover has-image" style="background-image:url(&quot;' + escapeHTML(song.coverImage) + '&quot;)"></span>'
+            : '<span class="compact-track-cover">' + (song.type === "instrumental" ? "♫" : "♪") + '</span>';
 
         return `
-            <div class="tool-card music-track-card">
+            <article class="music-track-card compact-music-track">
                 ${coverMarkup}
-                <h3>🎵 ${title}</h3>
-                <p class="music-track-type">${song.type === "imported" ? "📥 IMPORTED AUDIO" : song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
-                <p>Status: ${status}</p>
-                <div class="music-track-details">
-                    <p><strong>Artist:</strong> ${escapeHTML(song.artistName || "Not set")}</p>
-                    <p><strong>Album:</strong> ${escapeHTML(song.albumName || "Single")}</p>
-                    <p><strong>Genre:</strong> ${escapeHTML(song.genre || song.musicStyle || "Not set")}</p>
-                    <p><strong>Duration:</strong> <span data-track-duration="${id}">${song.durationSeconds ? formatTime(song.durationSeconds) : "Not detected yet"}</span></p>
-                    <p><strong>Created:</strong> ${song.createdAt ? escapeHTML(new Date(song.createdAt).toLocaleDateString()) : "Date unavailable"}</p>
+                <div class="compact-track-info">
+                    <strong class="compact-track-title">${title}</strong>
+                    <span class="compact-track-subtitle">${escapeHTML(song.artistName || "Unknown artist")} · ${escapeHTML(song.genre || song.musicStyle || (song.type === "instrumental" ? "Instrumental" : "Music"))}</span>
                 </div>
-                <details class="track-metadata-editor">
-                    <summary>✏️ EDIT TRACK DETAILS</summary>
-                    <label>Artist name<input type="text" maxlength="80" data-meta-field="artistName" value="${escapeHTML(song.artistName || "")}" placeholder="Artist / producer name"></label>
-                    <label>Album name<input type="text" maxlength="100" data-meta-field="albumName" value="${escapeHTML(song.albumName || "")}" placeholder="Album or project name"></label>
-                    <label>Genre / music style<input type="text" maxlength="60" data-meta-field="genre" value="${escapeHTML(song.genre || song.musicStyle || "")}" placeholder="e.g. Hip-Hop, R&B, Gospel"></label>
-                    <button type="button" class="collection-action-btn" data-save-metadata="${id}">💾 SAVE DETAILS</button>
-                </details>
                 ${controls}
-                <div class="music-card-actions">
-                    <label class="collection-action-btn cover-upload-label" for="coverUpload_${id}">🖼️ ${song.coverImage ? "CHANGE COVER" : "UPLOAD COVER"}</label>
-                    <input class="music-cover-input" id="coverUpload_${id}" type="file" accept="image/jpeg,image/png,image/webp" data-cover-upload="${id}">
-                    <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ FAVORITED" : "♡ ADD TO FAVORITES"}</button>
-                    <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ ADD TO PLAYLIST</button>
-                    ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">REMOVE FROM PLAYLIST</button>' : ""}
-                    <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ ADD TO ALBUM</button>
-                    ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ MOVE UP</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ MOVE DOWN</button><button type="button" class="collection-action-btn" data-remove-from-album="' + id + '">REMOVE FROM ALBUM</button>' : ""}
-                </div>
-                <p class="music-task-id">Task ID: ${id}</p>
-                <button class="primary-btn" type="button" data-delete-music="${id}" style="margin-top:12px;background:#ff4757;">🗑️ DELETE TRACK</button>
-            </div>`;
+                <details class="compact-track-more">
+                    <summary title="Track options" aria-label="Track options">•••</summary>
+                    <div class="compact-track-options">
+                        <span class="music-track-type">${song.type === "imported" ? "IMPORTED AUDIO" : song.type === "instrumental" ? "AI INSTRUMENTAL" : "FULL AI SONG"} · ${escapeHTML(status)}</span>
+                        <p>Album: ${escapeHTML(song.albumName || "Single")} · Duration: <span data-track-duration="${id}">${song.durationSeconds ? formatTime(song.durationSeconds) : "—"}</span></p>
+                        <details class="track-metadata-editor">
+                            <summary>Edit track details</summary>
+                            <label>Artist name<input type="text" maxlength="80" data-meta-field="artistName" value="${escapeHTML(song.artistName || "")}" placeholder="Artist / producer name"></label>
+                            <label>Album name<input type="text" maxlength="100" data-meta-field="albumName" value="${escapeHTML(song.albumName || "")}" placeholder="Album or project name"></label>
+                            <label>Genre / music style<input type="text" maxlength="60" data-meta-field="genre" value="${escapeHTML(song.genre || song.musicStyle || "")}" placeholder="e.g. Hip-Hop, R&B, Gospel"></label>
+                            <button type="button" class="collection-action-btn" data-save-metadata="${id}">Save details</button>
+                        </details>
+                        <div class="music-card-actions">
+                            <label class="collection-action-btn cover-upload-label" for="coverUpload_${id}">${song.coverImage ? "Change cover" : "Upload cover"}</label>
+                            <input class="music-cover-input" id="coverUpload_${id}" type="file" accept="image/jpeg,image/png,image/webp" data-cover-upload="${id}">
+                            <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ Favorited" : "♡ Add to favorites"}</button>
+                            <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ Add to playlist</button>
+                            ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">Remove from playlist</button>' : ""}
+                            <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ Add to album</button>
+                            ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ Move down</button>' : ""}
+                            <button type="button" class="collection-action-btn" data-delete-music="${id}">Delete track</button>
+                        </div>
+                    </div>
+                </details>
+            </article>
+        `;
     }).join("");
 
     collection.innerHTML = toolbar + albumHeaderMarkup + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';

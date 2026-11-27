@@ -1056,3 +1056,20 @@ button {
 .playlist-detail-copy{min-width:0}.playlist-detail-copy h2{margin:5px 0;overflow-wrap:anywhere}.playlist-detail-copy p{color:var(--muted);font-size:12px;margin-bottom:12px}
 .playlist-detail-copy .album-playback-actions{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:650px){.playlist-detail-header{padding:14px}.playlist-detail-copy h2{font-size:18px}.playlist-detail-copy .album-playback-actions{gap:6px}}
+
+
+/* PLAYLIST ARTWORK AND ORDER CONTROLS */
+.collection-playlist-item { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
+.collection-playlist-chip { display:inline-flex; align-items:center; gap:9px; text-align:left; }
+.playlist-chip-cover { width:34px; height:34px; flex:0 0 34px; display:inline-flex; align-items:center; justify-content:center; border-radius:7px; background-size:cover; background-position:center; }
+.playlist-chip-placeholder { color:var(--cyan); background:linear-gradient(135deg,#15345b,#38245d); font-size:21px; font-weight:800; }
+.playlist-detail-header { min-width:0; }
+.playlist-detail-cover { width:116px; height:116px; flex:0 0 116px; border-radius:12px; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:42px; }
+.playlist-detail-copy { flex:1; min-width:0; }
+.playlist-cover-label { cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+@media(max-width:650px) {
+ .playlist-detail-header { flex-wrap:wrap; gap:12px; }
+ .playlist-detail-cover { width:82px; height:82px; flex-basis:82px; }
+ .collection-playlist-item { align-items:stretch; }
+ .collection-playlist-item > button { flex:1 1 auto; }
+}

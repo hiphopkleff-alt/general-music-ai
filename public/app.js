@@ -1713,12 +1713,24 @@ if (playButton) {
         playbackQueueIds = null;
     }
 
-    const trackId = playButton.dataset.playMusic;
-    recordRecentlyPlayed(trackId);
-    await playTrack(trackId);
+    const trackId = String(playButton.dataset.playMusic);
 
-    // Expand the embedded player inside the selected track card.
+    // The compact row is a true Play/Pause toggle for the currently loaded song.
+    if (String(currentTrackId) === trackId && audioElement) {
+        if (audioElement.paused) {
+            try { await audioElement.play(); }
+            catch (error) { console.error("Playback error:", error); }
+        } else {
+            audioElement.pause();
+        }
+    } else {
+        recordRecentlyPlayed(trackId);
+        await playTrack(trackId);
+    }
+
+    // Refresh the compact row icon to match the real audio playback state.
     renderMusicCollection();
+    updatePlayerPlayState();
     return;
 }
 

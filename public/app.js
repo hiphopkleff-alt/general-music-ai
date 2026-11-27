@@ -1234,7 +1234,7 @@ function renderMusicCollection() {
     });
     const sortInput = document.getElementById("musicSort");
     const sortMode = sortInput ? sortInput.value : "newest";
-    const sortedTasks = [...filteredTasks].sort((a, b) => {
+    const sortedTasks = collectionMode === "album" ? [...filteredTasks] : [...filteredTasks].sort((a, b) => {
         const av = String(a[sortMode === "newest" || sortMode === "oldest" ? "createdAt" : sortMode] || "").toLowerCase();
         const bv = String(b[sortMode === "newest" || sortMode === "oldest" ? "createdAt" : sortMode] || "").toLowerCase();
         if (sortMode === "newest") return (Date.parse(bv) || 0) - (Date.parse(av) || 0);
@@ -1288,13 +1288,13 @@ function renderMusicCollection() {
         collection.innerHTML = toolbar;
         return;
     }
+    let albumHeaderMarkup = "";
     if (collectionMode === "album") {
         const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
         if (!album) { collectionMode = "albums"; activeAlbumId = null; renderMusicCollection(); return; }
-        const header = '<section class="album-detail-header">' +
+        albumHeaderMarkup = '<section class="album-detail-header">' +
             (album.coverImage ? '<div class="album-detail-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></div>' : '<div class="album-detail-cover album-placeholder">💿</div>') +
             '<div><span class="album-kicker">ALBUM</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p></div></section>';
-        collection.innerHTML = toolbar + header;
     }
 
     if (collectionMode === "playlists" && !activePlaylistId) {
@@ -1368,7 +1368,7 @@ function renderMusicCollection() {
             </div>`;
     }).join("");
 
-    collection.innerHTML = toolbar + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
+    collection.innerHTML = toolbar + albumHeaderMarkup + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
 
 /* TRACK SORTING */

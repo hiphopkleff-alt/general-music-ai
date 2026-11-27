@@ -21,6 +21,7 @@ const originalDashboard = app.innerHTML;
 let currentPage = "dashboard";
 let uploadedAudio = null;
 let nowPlayingReturnPage = "music";
+let nowPlayingReturnScrollY = 0;
 
 const pageHistory = [];
 
@@ -212,6 +213,12 @@ playerElements.play.setAttribute(
     "aria-label",
     playing ? "Pause" : "Play"
 );
+document.querySelectorAll("[data-play-music]").forEach(button => {
+    const isCurrent = String(button.dataset.playMusic) === String(currentTrackId);
+    button.textContent = isCurrent && playing ? "Ⅱ" : "▶";
+    button.title = isCurrent && playing ? "Pause" : "Play";
+    button.setAttribute("aria-label", isCurrent && playing ? "Pause" : "Play");
+});
 document.querySelectorAll("[data-pause-music]").forEach(button => {
     button.textContent = playing ? "Ⅱ" : "▶";
     button.title = playing ? "Pause" : "Play";
@@ -1428,7 +1435,7 @@ function renderMusicCollection() {
         const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
             <div class="music-card-controls compact-track-controls">
                 ${isExpandedPlayer ? '<span class="inline-playing-badge">NOW PLAYING</span>' : `
-                    <button class="track-icon-btn track-play-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"} title="Play" aria-label="Play">${localAudioReady ? "▶" : "… "}</button>
+                    <button class="track-icon-btn track-play-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"} title="Play" aria-label="Play">${localAudioReady ? (isCurrentTrack && audioElement && !audioElement.paused ? "Ⅱ" : "▶") : "… "}</button>
                     ${downloadControl}
                 `}
             </div>` : '<span class="track-unavailable">Audio not ready</span>';
@@ -1663,14 +1670,14 @@ document.addEventListener("input", event => {
 document.addEventListener("click", async event => {
 
 const miniPlayer = event.target.closest(".player .now-playing");
-if (miniPlayer && currentTrackId) { event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return; }
+if (miniPlayer && currentTrackId) { event.preventDefault(); if (currentPage !== "nowplaying") { nowPlayingReturnPage = currentPage; nowPlayingReturnScrollY = window.scrollY || window.pageYOffset || 0; } navigate("nowplaying"); return; }
 const fullPlayerArtwork = event.target.closest(".full-player-art");
-if (fullPlayerArtwork && currentPage === "nowplaying") { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); return; }
+if (fullPlayerArtwork && currentPage === "nowplaying") { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); requestAnimationFrame(() => window.scrollTo(0, nowPlayingReturnScrollY)); return; }
 const fullPlayerSurface = event.target.closest(".full-player-content");
-if (fullPlayerSurface && currentPage === "nowplaying" && !event.target.closest("button,a,input")) { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); return; }
+if (fullPlayerSurface && currentPage === "nowplaying" && !event.target.closest("button,a,input")) { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); requestAnimationFrame(() => window.scrollTo(0, nowPlayingReturnScrollY)); return; }
 const openCurrentTrack = event.target.closest("[data-open-current-track]");
 if (openCurrentTrack && currentTrackId && String(openCurrentTrack.dataset.openCurrentTrack) === String(currentTrackId)) {
-    event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return;
+    event.preventDefault(); if (currentPage !== "nowplaying") { nowPlayingReturnPage = currentPage; nowPlayingReturnScrollY = window.scrollY || window.pageYOffset || 0; } navigate("nowplaying"); return;
 }
 if (event.target.closest("[data-full-toggle]")) { event.preventDefault(); await togglePlayback(); renderNowPlayingPage(); return; }
 if (event.target.closest("[data-full-next]")) { event.preventDefault(); await playNextTrack(); renderNowPlayingPage(); return; }

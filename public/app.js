@@ -20,6 +20,7 @@ const originalDashboard = app.innerHTML;
 
 let currentPage = "dashboard";
 let uploadedAudio = null;
+let nowPlayingReturnPage = "music";
 
 const pageHistory = [];
 
@@ -1416,7 +1417,7 @@ function renderMusicCollection() {
         const localAudioReady = !isLocalAudio || Boolean(localAudioURL);
         const favorite = favorites.includes(String(song.id));
         const isCurrentTrack = String(currentTrackId) === String(song.id);
-        const isExpandedPlayer = isCurrentTrack && Boolean(audioElement);
+        const isExpandedPlayer = false; // Keep the music list in its normal compact layout; full player opens on demand.
         const playableIds = sortedTasks.filter(track => hasPlayableAudio(track)).map(track => String(track.id));
         const currentQueueIndex = playableIds.indexOf(String(song.id));
         const previousId = currentQueueIndex > 0 ? playableIds[currentQueueIndex - 1] : (playableIds.length > 1 ? playableIds[playableIds.length - 1] : "");
@@ -1439,7 +1440,7 @@ function renderMusicCollection() {
         return `
             <article class="music-track-card compact-music-track">
                 ${coverMarkup}
-                <div class="compact-track-info">
+                <div class="compact-track-info" data-open-current-track="${isCurrentTrack ? id : ""}" role="${isCurrentTrack ? "button" : "group"}" tabindex="${isCurrentTrack ? "0" : "-1"}">
                     <strong class="compact-track-title">${title}</strong>
                     <span class="compact-track-subtitle">${escapeHTML(song.artistName || "Unknown artist")} · ${escapeHTML(song.genre || song.musicStyle || (song.type === "instrumental" ? "Instrumental" : "Music"))}</span>
                 </div>
@@ -1662,7 +1663,13 @@ document.addEventListener("input", event => {
 document.addEventListener("click", async event => {
 
 const miniPlayer = event.target.closest(".player .now-playing");
-if (miniPlayer && currentTrackId) { event.preventDefault(); navigate("nowplaying"); return; }
+if (miniPlayer && currentTrackId) { event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return; }
+const fullPlayerArtwork = event.target.closest(".full-player-art");
+if (fullPlayerArtwork && currentPage === "nowplaying") { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); return; }
+const openCurrentTrack = event.target.closest("[data-open-current-track]");
+if (openCurrentTrack && currentTrackId && String(openCurrentTrack.dataset.openCurrentTrack) === String(currentTrackId)) {
+    event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return;
+}
 if (event.target.closest("[data-full-toggle]")) { event.preventDefault(); await togglePlayback(); renderNowPlayingPage(); return; }
 if (event.target.closest("[data-full-next]")) { event.preventDefault(); await playNextTrack(); renderNowPlayingPage(); return; }
 if (event.target.closest("[data-full-previous]")) { event.preventDefault(); await playPreviousTrack(); renderNowPlayingPage(); return; }
@@ -3280,6 +3287,7 @@ function navigate(page, isBackNavigation = false) {
     }
 
     currentPage = page;
+    document.body.classList.toggle("now-playing-fullscreen", page === "nowplaying");
     uploadedAudio = null;
 
     // Display the selected page

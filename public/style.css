@@ -966,3 +966,10 @@ button {
 .album-kicker { color:var(--cyan); font-size:10px; letter-spacing:2px; font-weight:bold; }
 .album-cover-label { text-align:center; }
 @media(max-width:520px) { .album-detail-header { align-items:flex-start; flex-direction:column; } .album-detail-cover { width:100px; height:100px; flex-basis:100px; } .album-library-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+
+/* Album playback controls */
+.album-detail-header .album-detail-copy { min-width: 0; }
+.album-playback-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.album-playback-actions button { min-height:40px; }
+.album-playback-actions .primary-btn { padding:10px 16px; }

@@ -1050,3 +1050,9 @@ button {
  .album-playback-actions { gap:5px; }
  .album-playback-actions button { min-height:32px; padding:7px 8px; font-size:9px; }
 }
+
+/* PLAYLIST DETAIL */
+.playlist-detail-header{display:flex;align-items:center;gap:18px;margin:18px 0;padding:20px;border:1px solid rgba(25,217,255,.25);border-radius:16px;background:linear-gradient(135deg,#142344,#0a1730)}
+.playlist-detail-copy{min-width:0}.playlist-detail-copy h2{margin:5px 0;overflow-wrap:anywhere}.playlist-detail-copy p{color:var(--muted);font-size:12px;margin-bottom:12px}
+.playlist-detail-copy .album-playback-actions{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:650px){.playlist-detail-header{padding:14px}.playlist-detail-copy h2{font-size:18px}.playlist-detail-copy .album-playback-actions{gap:6px}}

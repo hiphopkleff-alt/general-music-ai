@@ -250,8 +250,15 @@ if (playerElements.artist) {
 }
 
 if (playerElements.cover) {
-    playerElements.cover.textContent =
-        track.type === "instrumental" ? "🎹" : "🎵";
+    if (track.coverImage) {
+        playerElements.cover.textContent = "";
+        playerElements.cover.style.backgroundImage = 'url("' + track.coverImage + '")';
+        playerElements.cover.classList.add("has-artwork");
+    } else {
+        playerElements.cover.style.backgroundImage = "";
+        playerElements.cover.textContent = track.type === "instrumental" ? "🎹" : "🎵";
+        playerElements.cover.classList.remove("has-artwork");
+    }
 }
 
 }
@@ -1274,13 +1281,20 @@ function renderMusicCollection() {
                 <a class="primary-btn" href="${escapeHTML(playableURL)}" download target="_blank" rel="noopener noreferrer" data-download-music="${id}">⬇️ DOWNLOAD</a>
             </div>` : '<p>🎧 Audio will appear here when generation succeeds.</p>';
 
+        const coverMarkup = song.coverImage
+            ? '<div class="music-cover-art has-image" style="background-image:url(&quot;' + escapeHTML(song.coverImage) + '&quot;)"></div>'
+            : '<div class="music-cover-art generated-cover ' + (song.type === "instrumental" ? "instrumental-cover" : "song-cover") + '><span>' + (song.type === "instrumental" ? "🎹" : "🎤") + '</span><small>GENERAL MUSIC AI</small></div>';
+
         return `
             <div class="tool-card music-track-card">
+                ${coverMarkup}
                 <h3>🎵 ${title}</h3>
                 <p class="music-track-type">${song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
                 <p>Status: ${status}</p>
                 ${controls}
                 <div class="music-card-actions">
+                    <label class="collection-action-btn cover-upload-label" for="coverUpload_${id}">🖼️ ${song.coverImage ? "CHANGE COVER" : "UPLOAD COVER"}</label>
+                    <input class="music-cover-input" id="coverUpload_${id}" type="file" accept="image/jpeg,image/png,image/webp" data-cover-upload="${id}">
                     <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ FAVORITED" : "♡ ADD TO FAVORITES"}</button>
                     <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ ADD TO PLAYLIST</button>
                     ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">REMOVE FROM PLAYLIST</button>' : ""}
@@ -1292,6 +1306,39 @@ function renderMusicCollection() {
 
     collection.innerHTML = toolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
+
+/* TRACK COVER ARTWORK */
+async function compressCoverImage(file) {
+    if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Choose a JPG, PNG or WebP image.");
+    if (file.size > 5 * 1024 * 1024) throw new Error("Please choose an image smaller than 5 MB.");
+    const sourceURL = URL.createObjectURL(file);
+    try {
+        const image = new Image(); image.src = sourceURL;
+        await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error("This image could not be opened.")); });
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(512 / image.width, 512 / image.height, 1);
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.78);
+    } finally { URL.revokeObjectURL(sourceURL); }
+}
+document.addEventListener("change", async event => {
+    const input = event.target.closest("[data-cover-upload]");
+    if (!input || !input.files || !input.files[0]) return;
+    const trackId = String(input.dataset.coverUpload);
+    input.disabled = true;
+    try {
+        const coverImage = await compressCoverImage(input.files[0]);
+        const tasks = getSavedTasks();
+        const track = tasks.find(item => String(item.id) === trackId);
+        if (!track) throw new Error("This music track could not be found.");
+        track.coverImage = coverImage;
+        if (!saveTasks(tasks)) throw new Error("Your browser could not save this cover. Try a smaller image.");
+        if (String(currentTrackId) === trackId) updatePlayerInformation(track);
+        renderMusicCollection();
+    } catch (error) { alert(error.message || "Unable to save this cover image."); input.disabled = false; }
+});
 
 /* ==========================================
 GLOBAL SEARCH

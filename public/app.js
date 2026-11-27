@@ -875,13 +875,40 @@ lyrics: `
 
     <div class="tool-card lyrics-editor-card">
 
-        <h3>📝 LYRICS EDITOR</h3>
+        <h3>📝 SONGWRITING WORKSPACE</h3>
+        <p class="lyrics-workspace-note">Build your song section by section. Your draft is saved automatically on this device.</p>
+
+        <div class="lyrics-structure-tools">
+            <label for="lyricsStructure">Song Structure</label>
+            <select id="lyricsStructure">
+                <option value="Intro, Verse 1, Chorus, Verse 2, Chorus, Bridge, Final Chorus, Outro">Full song</option>
+                <option value="Intro, Chorus, Verse 1, Chorus, Verse 2, Chorus, Outro">Hook-first</option>
+                <option value="Verse 1, Chorus, Verse 2, Chorus">Short song</option>
+                <option value="Verse 1, Verse 2, Verse 3">Rap verses</option>
+                <option value="Intro, Verse 1, Pre-Chorus, Chorus, Verse 2, Pre-Chorus, Chorus, Bridge, Final Chorus, Outro">Pop structure</option>
+            </select>
+            <button class="primary-btn lyrics-action-btn" id="insertStructure" type="button">＋ INSERT FULL STRUCTURE</button>
+        </div>
+
+        <div class="lyrics-section-tools">
+            <span>ADD SECTION:</span>
+            <button type="button" data-lyrics-section="Intro">Intro</button>
+            <button type="button" data-lyrics-section="Verse 1">Verse</button>
+            <button type="button" data-lyrics-section="Pre-Chorus">Pre-Chorus</button>
+            <button type="button" data-lyrics-section="Chorus">Chorus</button>
+            <button type="button" data-lyrics-section="Bridge">Bridge</button>
+            <button type="button" data-lyrics-section="Outro">Outro</button>
+        </div>
 
         <textarea
             id="lyricsEditor"
             rows="14"
-            placeholder="Write or paste your lyrics here..."
+            placeholder="[INTRO]\nWrite your opening lines here...\n\n[VERSE 1]\n..."
         ></textarea>
+        <div class="lyrics-editor-meta">
+            <span id="lyricsWordCount">0 words · 0 characters</span>
+            <span id="lyricsSaveStatus">Draft ready</span>
+        </div>
 
         <div class="lyrics-actions">
 
@@ -2059,6 +2086,7 @@ form.addEventListener("submit", async event => {
             : JSON.stringify(lyrics, null, 2);
 
         lyricsEditor.value = lyricsText;
+        lyricsEditor.dispatchEvent(new Event("input", { bubbles: true }));
 
         resultBox.innerHTML = `
 
@@ -2112,6 +2140,11 @@ const status = document.getElementById("lyricsEditorStatus");
 const copyButton = document.getElementById("copyLyrics");
 const downloadButton = document.getElementById("downloadLyrics");
 const clearButton = document.getElementById("clearLyrics");
+const structureSelect = document.getElementById("lyricsStructure");
+const insertStructureButton = document.getElementById("insertStructure");
+const wordCount = document.getElementById("lyricsWordCount");
+const saveStatus = document.getElementById("lyricsSaveStatus");
+const draftKey = "gtp_music_lyrics_draft_v1";
 
 if (
     !editor ||
@@ -2121,6 +2154,63 @@ if (
     !clearButton
 ) {
     return;
+}
+
+function updateLyricsMeta() {
+    const value = editor.value || "";
+    const words = value.trim() ? value.trim().split(/\\s+/).length : 0;
+    if (wordCount) wordCount.textContent = words + " words · " + value.length + " characters";
+}
+
+function saveLyricsDraft() {
+    try {
+        localStorage.setItem(draftKey, editor.value);
+        if (saveStatus) saveStatus.textContent = "✓ Draft saved on this device";
+    } catch (error) {
+        if (saveStatus) saveStatus.textContent = "Draft could not be saved";
+    }
+}
+
+try {
+    const savedDraft = localStorage.getItem(draftKey);
+    if (!editor.value.trim() && savedDraft) editor.value = savedDraft;
+} catch (error) {
+    console.warn("Lyrics draft restore unavailable:", error);
+}
+updateLyricsMeta();
+
+editor.addEventListener("input", () => {
+    updateLyricsMeta();
+    saveLyricsDraft();
+});
+
+document.querySelectorAll("[data-lyrics-section]").forEach(button => {
+    button.addEventListener("click", () => {
+        const section = button.getAttribute("data-lyrics-section");
+        const insertion = (editor.value.trim() ? "\\n\\n" : "") + "[" + section.toUpperCase() + "]\\n";
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.setRangeText(insertion, start, end, "end");
+        editor.focus();
+        updateLyricsMeta();
+        saveLyricsDraft();
+        status.textContent = section + " section added.";
+    });
+});
+
+if (insertStructureButton && structureSelect) {
+    insertStructureButton.addEventListener("click", () => {
+        if (editor.value.trim() && !confirm("Insert a song structure at the end of your current lyrics?")) return;
+        const sections = structureSelect.value.split(",").map(item => item.trim());
+        const structure = sections.map(section => "[" + section.toUpperCase() + "]\\n\\n").join("");
+        const prefix = editor.value.trim() ? "\\n\\n" : "";
+        editor.value = editor.value.replace(/\\s+$/, "") + prefix + structure;
+        editor.focus();
+        editor.setSelectionRange(editor.value.length, editor.value.length);
+        updateLyricsMeta();
+        saveLyricsDraft();
+        status.textContent = "✓ Song structure inserted. Start writing each section.";
+    });
 }
 
 copyButton.addEventListener("click", async () => {
@@ -2198,6 +2288,9 @@ clearButton.addEventListener("click", () => {
     }
 
     editor.value = "";
+    try { localStorage.removeItem(draftKey); } catch (error) {}
+    updateLyricsMeta();
+    if (saveStatus) saveStatus.textContent = "Draft cleared";
 
     status.textContent = "✅ Lyrics cleared.";
 });

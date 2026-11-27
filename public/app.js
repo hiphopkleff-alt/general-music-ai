@@ -116,6 +116,7 @@ function renderPlaybackQueue() {
             <button type="button" class="sleep-timer-cancel" data-sleep-cancel disabled>TURN TIMER OFF</button>
         </section>
         <div class="queue-footer"><button type="button" class="queue-clear" data-queue-clear>CLEAR UPCOMING</button></div>`;
+    if (typeof updateSleepTimerDisplay === "function") updateSleepTimerDisplay();
     const badge=document.getElementById("queueToggle");
     if(badge) badge.dataset.count=String(upcoming.length);
     return panel;

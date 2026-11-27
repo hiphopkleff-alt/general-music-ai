@@ -1334,10 +1334,11 @@ function renderMusicCollection() {
                 '<button type="button" class="album-open-button" data-open-album="' + escapeHTML(album.id) + '">' +
                 (album.coverImage ? '<span class="album-mini-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></span>' : '<span class="album-mini-cover album-placeholder">💿</span>') +
                 '<strong>' + escapeHTML(album.name) + '</strong><small>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</small></button>' +
+                '<div class="album-card-actions"><button type="button" class="collection-action-btn" data-play-album="' + escapeHTML(album.id) + '">▶ PLAY</button>' +
                 '<label class="collection-action-btn album-cover-label" for="albumCover_' + escapeHTML(album.id) + '">🖼️ COVER</label>' +
                 '<input class="music-cover-input" id="albumCover_' + escapeHTML(album.id) + '" type="file" accept="image/jpeg,image/png,image/webp" data-album-cover="' + escapeHTML(album.id) + '">' +
-                '<button type="button" class="collection-action-btn" data-rename-album="' + escapeHTML(album.id) + '">✏️ RENAME</button>' +
-                '<button type="button" class="collection-action-btn" data-delete-album="' + escapeHTML(album.id) + '">🗑️ DELETE</button></div>').join("") +
+                '<button type="button" class="collection-action-btn" data-rename-album="' + escapeHTML(album.id) + '">✏️ EDIT</button>' +
+                '<button type="button" class="collection-action-btn" data-delete-album="' + escapeHTML(album.id) + '">🗑️ DELETE</button></div></div>').join("") +
                 (getMusicAlbums().length ? "" : '<p class="collection-muted">Create your first album to organise your tracks.</p>') + '</div>' : ""}
         </div>
     `;
@@ -1352,8 +1353,8 @@ function renderMusicCollection() {
         if (!album) { collectionMode = "albums"; activeAlbumId = null; renderMusicCollection(); return; }
         albumHeaderMarkup = '<section class="album-detail-header">' +
             (album.coverImage ? '<div class="album-detail-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></div>' : '<div class="album-detail-cover album-placeholder">💿</div>') +
-            '<div class="album-detail-copy"><span class="album-kicker">ALBUM</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p>' +
-            '<div class="album-playback-actions"><button type="button" class="primary-btn" data-play-album="' + escapeHTML(album.id) + '">▶ PLAY ALBUM</button><button type="button" class="collection-action-btn" data-shuffle-album="' + escapeHTML(album.id) + '">🔀 SHUFFLE</button></div></div></section>';
+            '<div class="album-detail-copy"><span class="album-kicker">ALBUM COLLECTION</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p>' +
+            '<div class="album-playback-actions"><button type="button" class="primary-btn" data-play-album="' + escapeHTML(album.id) + '">▶ PLAY ALBUM</button><button type="button" class="collection-action-btn" data-shuffle-album="' + escapeHTML(album.id) + '">🔀 SHUFFLE</button><button type="button" class="collection-action-btn" data-edit-album="' + escapeHTML(album.id) + '">✏️ EDIT DETAILS</button><button type="button" class="collection-action-btn" data-album-back>← ALL ALBUMS</button></div></div></section>';
     }
 
     if (collectionMode === "playlists" && !activePlaylistId) {
@@ -1437,7 +1438,7 @@ function renderMusicCollection() {
                             <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ Add to playlist</button>
                             ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">Remove from playlist</button>' : ""}
                             <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ Add to album</button>
-                            ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ Move down</button>' : ""}
+                            ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-remove-from-album="' + id + '">Remove from album</button><button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ Move up</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ Move down</button>' : ""}
                             <button type="button" class="collection-action-btn" data-delete-music="${id}">Delete track</button>
                         </div>
                     </div>
@@ -1721,9 +1722,30 @@ const createAlbum = event.target.closest("[data-create-album]");
 if (createAlbum) {
     const name = prompt("Enter an album name:");
     if (name && name.trim()) {
+        const artistName = prompt("Artist name (optional):", "");
         const albums = getMusicAlbums();
-        albums.unshift({ id: "album_" + Date.now(), name: name.trim().slice(0,80), artistName: "", coverImage: "", trackIds: [], createdAt: new Date().toISOString() });
+        albums.unshift({ id: "album_" + Date.now(), name: name.trim().slice(0,80), artistName: artistName === null ? "" : artistName.trim().slice(0,80), coverImage: "", trackIds: [], createdAt: new Date().toISOString() });
         saveMusicAlbums(albums); collectionMode = "albums"; activeAlbumId = null; renderMusicCollection();
+    }
+    return;
+}
+
+const albumBackButton = event.target.closest("[data-album-back]");
+if (albumBackButton) { activeAlbumId = null; collectionMode = "albums"; renderMusicCollection(); return; }
+
+const editAlbumButton = event.target.closest("[data-edit-album]");
+if (editAlbumButton) {
+    const albums = getMusicAlbums();
+    const album = albums.find(item => String(item.id) === String(editAlbumButton.dataset.editAlbum));
+    if (album) {
+        const name = prompt("Album name:", album.name);
+        if (name && name.trim()) {
+            const artistName = prompt("Artist name (optional):", album.artistName || "");
+            album.name = name.trim().slice(0, 80);
+            if (artistName !== null) album.artistName = artistName.trim().slice(0, 80);
+            saveMusicAlbums(albums);
+            renderMusicCollection();
+        }
     }
     return;
 }

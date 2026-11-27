@@ -337,7 +337,12 @@ if (index < 0) {
 }
 
 const track = playerPlaylist[index];
-const audioURL = await resolveTrackAudioURL(track);
+// Use an already-prepared local Blob URL synchronously on mobile taps.
+// This keeps audioElement.play() inside the original user gesture.
+const cachedLocalURL = track.audioBlobId
+    ? localAudioURLs.get(String(track.audioBlobId))
+    : "";
+const audioURL = cachedLocalURL || safeAudioURL(track.audioUrl) || await resolveTrackAudioURL(track);
 
 if (!audioURL) {
     alert("This track audio file could not be found on this device.");
@@ -1355,14 +1360,16 @@ function renderMusicCollection() {
         const title = escapeHTML(song.title || "Untitled Song");
         const id = escapeHTML(song.id);
         const status = escapeHTML(song.status || "preparing");
-        const playableURL = safeAudioURL(song.audioUrl);
         const isLocalAudio = Boolean(song.audioBlobId);
+        const localAudioURL = isLocalAudio ? (localAudioURLs.get(String(song.audioBlobId)) || "") : "";
+        const playableURL = safeAudioURL(song.audioUrl) || localAudioURL;
+        const localAudioReady = !isLocalAudio || Boolean(localAudioURL);
         const favorite = favorites.includes(String(song.id));
         const isCurrentTrack = String(currentTrackId) === String(song.id);
-        const controls = (playableURL || isLocalAudio) ? `
+        const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
             <div class="music-card-controls">
-                <button class="primary-btn" type="button" data-play-music="${id}">${isCurrentTrack && audioElement && !audioElement.paused ? "▶ NOW PLAYING" : "▶ PLAY TRACK"}</button>
-                ${playableURL ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download data-download-music="${id}">⬇️ DOWNLOAD</a>` : `<button class="primary-btn" type="button" data-download-local="${id}">⬇️ DOWNLOAD</button>`}
+                <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? (isCurrentTrack && audioElement && !audioElement.paused ? "❚❚ NOW PLAYING" : "▶ PLAY TRACK") : "PREPARING AUDIO..."}</button>
+                ${playableURL ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}">⬇️ DOWNLOAD</a>` : `<button class="primary-btn" type="button" disabled>PREPARING DOWNLOAD...</button>`}
             </div>` : '<p>🎧 Audio will appear here when generation succeeds or you import a file.</p>';
 
         const coverMarkup = song.coverImage
@@ -3256,6 +3263,21 @@ window.addEventListener("pagehide", () => {
 // Render the correct page for this independently served HTML document.
 navigate(getPageFromPath(), true);
 restoreGlobalPlayerState();
+
+// Prepare imported audio URLs before the user taps PLAY or DOWNLOAD.
+// Mobile browsers may reject media playback or synthetic downloads if IndexedDB
+// is accessed only after the tap, because the original user gesture is lost.
+async function prepareLocalAudioCache() {
+    const localTracks = getSavedTasks().filter(track => track && track.audioBlobId);
+    await Promise.all(localTracks.map(track =>
+        resolveTrackAudioURL(track).catch(error => {
+            console.warn("Unable to prepare imported audio:", track.id, error);
+            return "";
+        })
+    ));
+    if (document.getElementById("musicCollection")) renderMusicCollection();
+}
+prepareLocalAudioCache();
 
 updateDashboardStatistics();
 

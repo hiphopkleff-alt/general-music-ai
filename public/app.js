@@ -1666,6 +1666,8 @@ const miniPlayer = event.target.closest(".player .now-playing");
 if (miniPlayer && currentTrackId) { event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return; }
 const fullPlayerArtwork = event.target.closest(".full-player-art");
 if (fullPlayerArtwork && currentPage === "nowplaying") { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); return; }
+const fullPlayerSurface = event.target.closest(".full-player-content");
+if (fullPlayerSurface && currentPage === "nowplaying" && !event.target.closest("button,a,input")) { event.preventDefault(); navigate(nowPlayingReturnPage || "music"); return; }
 const openCurrentTrack = event.target.closest("[data-open-current-track]");
 if (openCurrentTrack && currentTrackId && String(openCurrentTrack.dataset.openCurrentTrack) === String(currentTrackId)) {
     event.preventDefault(); if (currentPage !== "nowplaying") nowPlayingReturnPage = currentPage; navigate("nowplaying"); return;

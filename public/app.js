@@ -1180,6 +1180,16 @@ function saveCustomPlaylists(items) {
     localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(items));
 }
 
+const ALBUMS_KEY = "gtp_music_albums_v1";
+let activeAlbumId = null;
+function getMusicAlbums() {
+    return readCollectionData(ALBUMS_KEY, []).map(album => ({ ...album, trackIds: Array.isArray(album.trackIds) ? album.trackIds : [] }));
+}
+function saveMusicAlbums(albums) {
+    localStorage.setItem(ALBUMS_KEY, JSON.stringify(albums));
+}
+
+
 function getRecentlyPlayed() {
     return readCollectionData(RECENT_KEY, []);
 }
@@ -1213,6 +1223,9 @@ function renderMusicCollection() {
     } else if (collectionMode === "playlist") {
         const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
         visibleTasks = playlist ? playlist.trackIds.map(id => savedTasks.find(song => String(song.id) === String(id))).filter(Boolean) : [];
+    } else if (collectionMode === "album") {
+        const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
+        visibleTasks = album ? album.trackIds.map(id => savedTasks.find(song => String(song.id) === String(id))).filter(Boolean) : [];
     }
 
     const filteredTasks = visibleTasks.filter(song => {
@@ -1237,7 +1250,8 @@ function renderMusicCollection() {
         ["all", "ALL TRACKS"],
         ["favorites", "♥ FAVORITES"],
         ["recent", "RECENTLY PLAYED"],
-        ["playlists", "PLAYLISTS"]
+        ["playlists", "PLAYLISTS"],
+        ["albums", "💿 ALBUMS"]
     ];
 
     const toolbar = `
@@ -1249,6 +1263,7 @@ function renderMusicCollection() {
             </div>
             <div class="collection-playlist-actions">
                 <button type="button" class="primary-btn" data-create-playlist>＋ CREATE PLAYLIST</button>
+                <button type="button" class="primary-btn" data-create-album>＋ CREATE ALBUM</button>
             </div>
             ${collectionMode === "playlists" || collectionMode === "playlist" ? `
                 <div class="collection-playlist-list">
@@ -1257,8 +1272,30 @@ function renderMusicCollection() {
                     `).join("") : '<p class="collection-muted">Create a playlist to organise your music.</p>'}
                 </div>
             ` : ""}
+            ${collectionMode === "albums" || collectionMode === "album" ? '<div class="album-library-grid">' + getMusicAlbums().map(album => '<div class="album-library-card">' +
+                '<button type="button" class="album-open-button" data-open-album="' + escapeHTML(album.id) + '">' +
+                (album.coverImage ? '<span class="album-mini-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></span>' : '<span class="album-mini-cover album-placeholder">💿</span>') +
+                '<strong>' + escapeHTML(album.name) + '</strong><small>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</small></button>' +
+                '<label class="collection-action-btn album-cover-label" for="albumCover_' + escapeHTML(album.id) + '">🖼️ COVER</label>' +
+                '<input class="music-cover-input" id="albumCover_' + escapeHTML(album.id) + '" type="file" accept="image/jpeg,image/png,image/webp" data-album-cover="' + escapeHTML(album.id) + '">' +
+                '<button type="button" class="collection-action-btn" data-rename-album="' + escapeHTML(album.id) + '">✏️ RENAME</button>' +
+                '<button type="button" class="collection-action-btn" data-delete-album="' + escapeHTML(album.id) + '">🗑️ DELETE</button></div>').join("") +
+                (getMusicAlbums().length ? "" : '<p class="collection-muted">Create your first album to organise your tracks.</p>') + '</div>' : ""}
         </div>
     `;
+
+    if (collectionMode === "albums" && !activeAlbumId) {
+        collection.innerHTML = toolbar;
+        return;
+    }
+    if (collectionMode === "album") {
+        const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
+        if (!album) { collectionMode = "albums"; activeAlbumId = null; renderMusicCollection(); return; }
+        const header = '<section class="album-detail-header">' +
+            (album.coverImage ? '<div class="album-detail-cover" style="background-image:url(&quot;' + escapeHTML(album.coverImage) + '&quot;)"></div>' : '<div class="album-detail-cover album-placeholder">💿</div>') +
+            '<div><span class="album-kicker">ALBUM</span><h2>' + escapeHTML(album.name) + '</h2><p>' + escapeHTML(album.artistName || "Various artists") + ' · ' + album.trackIds.length + ' tracks</p></div></section>';
+        collection.innerHTML = toolbar + header;
+    }
 
     if (collectionMode === "playlists" && !activePlaylistId) {
         collection.innerHTML = toolbar + (playlists.length
@@ -1323,6 +1360,8 @@ function renderMusicCollection() {
                     <button type="button" class="collection-action-btn ${favorite ? "is-favorite" : ""}" data-toggle-favorite="${id}">${favorite ? "♥ FAVORITED" : "♡ ADD TO FAVORITES"}</button>
                     <button type="button" class="collection-action-btn" data-add-to-playlist="${id}">＋ ADD TO PLAYLIST</button>
                     ${collectionMode === "playlist" ? '<button type="button" class="collection-action-btn" data-remove-from-playlist="' + id + '">REMOVE FROM PLAYLIST</button>' : ""}
+                    <button type="button" class="collection-action-btn" data-add-to-album="${id}">＋ ADD TO ALBUM</button>
+                    ${collectionMode === "album" ? '<button type="button" class="collection-action-btn" data-album-move-up="' + id + '">↑ MOVE UP</button><button type="button" class="collection-action-btn" data-album-move-down="' + id + '">↓ MOVE DOWN</button><button type="button" class="collection-action-btn" data-remove-from-album="' + id + '">REMOVE FROM ALBUM</button>' : ""}
                 </div>
                 <p class="music-task-id">Task ID: ${id}</p>
                 <button class="primary-btn" type="button" data-delete-music="${id}" style="margin-top:12px;background:#ff4757;">🗑️ DELETE TRACK</button>
@@ -1363,6 +1402,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = safeAudioURL(track.audioUrl);
         if (url && !track.durationSeconds) detectTrackDuration(track.id, url);
     });
+});
+
+/* ALBUM COVER UPLOAD */
+document.addEventListener("change", async event => {
+    const input = event.target.closest("[data-album-cover]");
+    if (!input || !input.files || !input.files[0]) return;
+    input.disabled = true;
+    try {
+        const coverImage = await compressCoverImage(input.files[0]);
+        const albums = getMusicAlbums(), album = albums.find(item => String(item.id) === String(input.dataset.albumCover));
+        if (!album) throw new Error("Album not found.");
+        album.coverImage = coverImage; saveMusicAlbums(albums); renderMusicCollection();
+    } catch (error) { alert(error.message || "Unable to save album artwork."); input.disabled = false; }
 });
 
 /* TRACK COVER ARTWORK */
@@ -1449,6 +1501,7 @@ const modeButton = event.target.closest("[data-collection-mode]");
 if (modeButton) {
     collectionMode = modeButton.dataset.collectionMode;
     activePlaylistId = null;
+    activeAlbumId = null;
     renderMusicCollection();
     return;
 }
@@ -1458,6 +1511,75 @@ if (playlistButton) {
     activePlaylistId = playlistButton.dataset.openPlaylist;
     collectionMode = "playlist";
     renderMusicCollection();
+    return;
+}
+
+const openAlbum = event.target.closest("[data-open-album]");
+if (openAlbum) { activeAlbumId = openAlbum.dataset.openAlbum; collectionMode = "album"; renderMusicCollection(); return; }
+
+const createAlbum = event.target.closest("[data-create-album]");
+if (createAlbum) {
+    const name = prompt("Enter an album name:");
+    if (name && name.trim()) {
+        const albums = getMusicAlbums();
+        albums.unshift({ id: "album_" + Date.now(), name: name.trim().slice(0,80), artistName: "", coverImage: "", trackIds: [], createdAt: new Date().toISOString() });
+        saveMusicAlbums(albums); collectionMode = "albums"; activeAlbumId = null; renderMusicCollection();
+    }
+    return;
+}
+
+const renameAlbum = event.target.closest("[data-rename-album]");
+if (renameAlbum) {
+    const albums = getMusicAlbums(), album = albums.find(item => String(item.id) === String(renameAlbum.dataset.renameAlbum));
+    if (album) { const name = prompt("Edit album name:", album.name); if (name && name.trim()) { album.name = name.trim().slice(0,80); saveMusicAlbums(albums); renderMusicCollection(); } }
+    return;
+}
+
+const deleteAlbum = event.target.closest("[data-delete-album]");
+if (deleteAlbum) {
+    if (confirm("Delete this album? Your tracks will remain in My Music.")) {
+        saveMusicAlbums(getMusicAlbums().filter(item => String(item.id) !== String(deleteAlbum.dataset.deleteAlbum)));
+        if (String(activeAlbumId) === String(deleteAlbum.dataset.deleteAlbum)) { activeAlbumId = null; collectionMode = "albums"; }
+        renderMusicCollection();
+    }
+    return;
+}
+
+const addToAlbum = event.target.closest("[data-add-to-album]");
+if (addToAlbum) {
+    const albums = getMusicAlbums();
+    if (!albums.length) { alert("Create an album first."); return; }
+    const answer = prompt("Choose album number:\n" + albums.map((a,i) => (i+1) + ". " + a.name).join("\n"));
+    const index = Number(answer) - 1;
+    if (answer !== null && Number.isInteger(index) && albums[index]) {
+        const ids = albums[index].trackIds;
+        if (!ids.some(id => String(id) === String(addToAlbum.dataset.addToAlbum))) ids.push(String(addToAlbum.dataset.addToAlbum));
+        saveMusicAlbums(albums); renderMusicCollection();
+    }
+    return;
+}
+
+const removeAlbumTrack = event.target.closest("[data-remove-from-album]");
+if (removeAlbumTrack) {
+    const albums = getMusicAlbums(), album = albums.find(item => String(item.id) === String(activeAlbumId));
+    if (album) { album.trackIds = album.trackIds.filter(id => String(id) !== String(removeAlbumTrack.dataset.removeFromAlbum)); saveMusicAlbums(albums); renderMusicCollection(); }
+    return;
+}
+
+const moveAlbumUp = event.target.closest("[data-album-move-up]");
+const moveAlbumDown = event.target.closest("[data-album-move-down]");
+if (moveAlbumUp || moveAlbumDown) {
+    const button = moveAlbumUp || moveAlbumDown, albums = getMusicAlbums();
+    const album = albums.find(item => String(item.id) === String(activeAlbumId));
+    if (album) {
+        const trackId = button.dataset.albumMoveUp || button.dataset.albumMoveDown;
+        const index = album.trackIds.findIndex(id => String(id) === String(trackId));
+        const target = index + (moveAlbumUp ? -1 : 1);
+        if (index >= 0 && target >= 0 && target < album.trackIds.length) {
+            [album.trackIds[index], album.trackIds[target]] = [album.trackIds[target], album.trackIds[index]];
+            saveMusicAlbums(albums); renderMusicCollection();
+        }
+    }
     return;
 }
 
@@ -1569,6 +1691,7 @@ const playlistsAfterDelete = getCustomPlaylists().map(item => ({
     trackIds: (item.trackIds || []).filter(trackId => String(trackId) !== String(id))
 }));
 saveCustomPlaylists(playlistsAfterDelete);
+saveMusicAlbums(getMusicAlbums().map(album => ({ ...album, trackIds: album.trackIds.filter(trackId => String(trackId) !== String(id)) })));
 
 const tasks = getSavedTasks().filter(
     song => String(song.id) !== String(id)

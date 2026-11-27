@@ -104,6 +104,17 @@ function renderPlaybackQueue() {
                 </div></article>`;
         }).join("") : '<p class="queue-empty">No upcoming songs. Add tracks from MY MUSIC.</p>'}
         </div>
+        <section class="sleep-timer-box" aria-label="Sleep timer">
+            <div class="sleep-timer-heading"><strong>🌙 SLEEP TIMER</strong><span id="sleepTimerStatus" aria-live="polite">OFF</span></div>
+            <div class="sleep-timer-options">
+                <button type="button" data-sleep-minutes="15">15 MIN</button>
+                <button type="button" data-sleep-minutes="30">30 MIN</button>
+                <button type="button" data-sleep-minutes="45">45 MIN</button>
+                <button type="button" data-sleep-minutes="60">60 MIN</button>
+                <button type="button" data-sleep-custom>CUSTOM</button>
+            </div>
+            <button type="button" class="sleep-timer-cancel" data-sleep-cancel disabled>TURN TIMER OFF</button>
+        </section>
         <div class="queue-footer"><button type="button" class="queue-clear" data-queue-clear>CLEAR UPCOMING</button></div>`;
     const badge=document.getElementById("queueToggle");
     if(badge) badge.dataset.count=String(upcoming.length);
@@ -120,6 +131,42 @@ function addTrackToQueue(trackId, playNext=false){
     else queue.push(id);
     playbackQueueIds=queue;savePlaybackQueue();refreshPlaylist();renderPlaybackQueue();return true;
 }
+let sleepTimerDeadline = 0;
+let sleepTimerInterval = null;
+function updateSleepTimerDisplay() {
+    const status = document.getElementById("sleepTimerStatus");
+    const cancel = document.querySelector("[data-sleep-cancel]");
+    const remaining = Math.max(0, Math.ceil((sleepTimerDeadline - Date.now()) / 1000));
+    if (status) status.textContent = sleepTimerDeadline
+        ? String(Math.floor(remaining / 60)).padStart(2, "0") + ":" + String(remaining % 60).padStart(2, "0") + " LEFT"
+        : "OFF";
+    if (cancel) cancel.disabled = !sleepTimerDeadline;
+}
+function stopSleepTimer() {
+    sleepTimerDeadline = 0;
+    if (sleepTimerInterval) clearInterval(sleepTimerInterval);
+    sleepTimerInterval = null;
+    updateSleepTimerDisplay();
+}
+function startSleepTimer(minutes) {
+    const value = Number(minutes);
+    if (!Number.isFinite(value) || value <= 0 || value > 720) {
+        alert("Choose a timer between 1 and 720 minutes.");
+        return;
+    }
+    sleepTimerDeadline = Date.now() + value * 60000;
+    if (sleepTimerInterval) clearInterval(sleepTimerInterval);
+    updateSleepTimerDisplay();
+    sleepTimerInterval = setInterval(() => {
+        if (Date.now() >= sleepTimerDeadline) {
+            stopSleepTimer();
+            if (audioElement && !audioElement.paused) audioElement.pause();
+            return;
+        }
+        updateSleepTimerDisplay();
+    }, 1000);
+}
+
 function moveQueueTrack(trackId,direction){
     refreshPlaylist();const queue=playerPlaylist.map(track=>String(track.id));
     const index=queue.indexOf(String(trackId)),target=index+direction,currentIndex=queue.indexOf(String(currentTrackId));
@@ -1800,7 +1847,11 @@ document.addEventListener("input", event => {
 
 document.addEventListener("click", async event => {
 
-if(event.target.closest("#queueToggle")){event.preventDefault();openPlaybackQueue();return;}
+if(event.target.closest("#queueToggle")){event.preventDefault();openPlaybackQueue();updateSleepTimerDisplay();return;}
+const sleepPreset=event.target.closest("[data-sleep-minutes]");
+if(sleepPreset){event.preventDefault();startSleepTimer(sleepPreset.dataset.sleepMinutes);return;}
+if(event.target.closest("[data-sleep-custom]")){event.preventDefault();const entered=prompt("Stop playback after how many minutes? (1–720)","20");if(entered!==null&&entered.trim()!=="")startSleepTimer(entered);return;}
+if(event.target.closest("[data-sleep-cancel]")){event.preventDefault();stopSleepTimer();return;}
 if(event.target.closest("[data-queue-close]")){closePlaybackQueue();return;}
 const qAdd=event.target.closest("[data-queue-add]");
 if(qAdd){event.preventDefault();addTrackToQueue(qAdd.dataset.queueAdd,false);qAdd.textContent="✓ Added to queue";return;}

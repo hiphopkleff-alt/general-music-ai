@@ -3181,7 +3181,7 @@ initializeGlobalSearch();
 // Restore the last selected track after a full-page navigation.
 // Browsers stop audio during document navigation, so playback resumes paused
 // at the saved position rather than continuing without interruption.
-function restoreGlobalPlayerState() {
+async function restoreGlobalPlayerState() {
     let savedState = null;
 
     try {

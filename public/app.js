@@ -1325,6 +1325,7 @@ function renderMusicCollection() {
                         <div class="collection-playlist-item">
                             <button type="button" class="collection-playlist-chip ${String(item.id) === String(activePlaylistId) && collectionMode === "playlist" ? "active" : ""}" data-open-playlist="${escapeHTML(item.id)}">${escapeHTML(item.name)} <small>${item.trackIds.length} tracks</small></button>
                             <button type="button" class="collection-action-btn" data-play-playlist="${escapeHTML(item.id)}">▶ PLAY</button>
+                            <button type="button" class="collection-action-btn" data-shuffle-playlist="${escapeHTML(item.id)}">🔀 SHUFFLE</button>
                             <button type="button" class="collection-action-btn" data-rename-playlist="${escapeHTML(item.id)}">✏️ RENAME</button>
                             <button type="button" class="collection-action-btn" data-delete-playlist="${escapeHTML(item.id)}">🗑️ DELETE</button>
                         </div>
@@ -1347,6 +1348,13 @@ function renderMusicCollection() {
         collection.innerHTML = toolbar;
         return;
     }
+    let playlistHeaderMarkup = "";
+    if (collectionMode === "playlist") {
+        const playlist = playlists.find(item => String(item.id) === String(activePlaylistId));
+        if (!playlist) { collectionMode = "playlists"; activePlaylistId = null; renderMusicCollection(); return; }
+        playlistHeaderMarkup = '<section class="playlist-detail-header"><div class="playlist-detail-copy"><span class="album-kicker">PLAYLIST COLLECTION</span><h2>' + escapeHTML(playlist.name) + '</h2><p>' + playlist.trackIds.length + ' tracks · Your personal mix</p><div class="album-playback-actions"><button type="button" class="primary-btn" data-play-playlist="' + escapeHTML(playlist.id) + '">▶ PLAY PLAYLIST</button><button type="button" class="collection-action-btn" data-shuffle-playlist="' + escapeHTML(playlist.id) + '">🔀 SHUFFLE</button><button type="button" class="collection-action-btn" data-playlist-back>← ALL PLAYLISTS</button></div></div></section>';
+    }
+
     let albumHeaderMarkup = "";
     if (collectionMode === "album") {
         const album = getMusicAlbums().find(item => String(item.id) === String(activeAlbumId));
@@ -1447,7 +1455,7 @@ function renderMusicCollection() {
         `;
     }).join("");
 
-    collection.innerHTML = toolbar + albumHeaderMarkup + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
+    collection.innerHTML = toolbar + playlistHeaderMarkup + albumHeaderMarkup + sortToolbar + '<div class="music-collection-grid">' + cards + '</div>';
 }
 
 /* IMPORT MP3 / M4A FILES INTO THE LOCAL MUSIC LIBRARY */
@@ -1810,7 +1818,7 @@ if (createPlaylistButton) {
     const name = prompt("Enter a name for your new playlist:");
     if (name && name.trim()) {
         const playlists = getCustomPlaylists();
-        playlists.push({ id: "playlist_" + Date.now(), name: name.trim().slice(0, 50), trackIds: [] });
+        playlists.push({ id: "playlist_" + Date.now(), name: name.trim().slice(0, 50), coverImage: "", trackIds: [], createdAt: new Date().toISOString() });
         saveCustomPlaylists(playlists);
         collectionMode = "playlists";
         activePlaylistId = null;
@@ -1820,16 +1828,21 @@ if (createPlaylistButton) {
 }
 
 const playPlaylistButton = event.target.closest("[data-play-playlist]");
-if (playPlaylistButton) {
-    const playlist = getCustomPlaylists().find(item => String(item.id) === String(playPlaylistButton.dataset.playPlaylist));
-    const playableIds = playlist ? (playlist.trackIds || []).filter(id => getSavedTasks().some(track => String(track.id) === String(id) && hasPlayableAudio(track))) : [];
+const shufflePlaylistButton = event.target.closest("[data-shuffle-playlist]");
+if (playPlaylistButton || shufflePlaylistButton) {
+    const button = playPlaylistButton || shufflePlaylistButton;
+    const playlist = getCustomPlaylists().find(item => String(item.id) === String(button.dataset.playPlaylist || button.dataset.shufflePlaylist));
+    let playableIds = playlist ? (playlist.trackIds || []).filter(id => getSavedTasks().some(track => String(track.id) === String(id) && hasPlayableAudio(track))) : [];
     if (!playableIds.length) { alert("This playlist has no playable tracks yet."); return; }
+    if (shufflePlaylistButton) playableIds = playableIds.slice().sort(() => Math.random() - 0.5);
     playbackQueueIds = playableIds;
     recordRecentlyPlayed(playableIds[0]);
     await playTrack(playableIds[0]);
     return;
 }
 
+const playlistBackButton = event.target.closest("[data-playlist-back]");
+if (playlistBackButton) { activePlaylistId = null; collectionMode = "playlists"; renderMusicCollection(); return; }
 const renamePlaylistButton = event.target.closest("[data-rename-playlist]");
 if (renamePlaylistButton) {
     const playlists = getCustomPlaylists();

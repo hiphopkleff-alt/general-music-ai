@@ -1371,8 +1371,10 @@ function renderMusicCollection() {
         const favorite = favorites.includes(String(song.id));
         const isCurrentTrack = String(currentTrackId) === String(song.id);
         const controls = (safeAudioURL(song.audioUrl) || isLocalAudio) ? `
-            <div class="music-card-controls">
-                <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? (isCurrentTrack && audioElement && !audioElement.paused ? "❚❚ NOW PLAYING" : "▶ PLAY TRACK") : "PREPARING AUDIO..."}</button>
+            <div class="music-card-controls independent-track-controls">
+                <button class="primary-btn" type="button" data-play-music="${id}" ${localAudioReady ? "" : "disabled"}>${localAudioReady ? "▶ PLAY" : "PREPARING..."}</button>
+                <button class="collection-action-btn" type="button" data-pause-music="${id}" ${isCurrentTrack && audioElement && !audioElement.paused ? "" : "disabled"}>❚❚ PAUSE</button>
+                <button class="collection-action-btn" type="button" data-next-music="${id}" ${localAudioReady ? "" : "disabled"}>⏭ NEXT</button>
                 ${playableURL ? `<a class="primary-btn" href="${escapeHTML(playableURL)}" download="${escapeHTML(song.importedFileName || (song.title || "music") + ".mp3")}" data-download-music="${id}">⬇️ DOWNLOAD</a>` : `<button class="primary-btn" type="button" disabled>PREPARING DOWNLOAD...</button>`}
             </div>` : '<p>🎧 Audio will appear here when generation succeeds or you import a file.</p>';
 
@@ -1381,10 +1383,10 @@ function renderMusicCollection() {
             : '<div class="music-cover-art generated-cover ' + (song.type === "instrumental" ? "instrumental-cover" : "song-cover") + '><span>' + (song.type === "instrumental" ? "🎹" : "🎤") + '</span><small>GENERAL MUSIC AI</small></div>';
 
         return `
-            <div class="tool-card music-track-card">
+            <div class="tool-card music-track-card independent-track-card">
                 ${coverMarkup}
-                <h3>🎵 ${title}</h3>
-                <p class="music-track-type">${song.type === "imported" ? "📥 IMPORTED AUDIO" : song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
+                <h3>🎵 ${escapeHTML(song.artistName || "Unknown Artist")} — ${title}</h3>
+                <p class="music-track-type">${song.type === "imported" ? "📥 IMPORTED SONG" : song.type === "instrumental" ? "🎹 AI INSTRUMENTAL" : "🎤 FULL AI SONG"}</p>
                 <p>Status: ${status}</p>
                 <div class="music-track-details">
                     <p><strong>Artist:</strong> ${escapeHTML(song.artistName || "Not set")}</p>
@@ -1576,6 +1578,36 @@ if (metadataButton) {
     track.metadataUpdatedAt = new Date().toISOString();
     if (!saveTasks(tasks)) { alert("Unable to save track details. Your browser storage may be full."); return; }
     renderMusicCollection();
+    return;
+}
+
+const pauseButton = event.target.closest("[data-pause-music]");
+if (pauseButton) {
+    event.preventDefault();
+    if (String(currentTrackId) === String(pauseButton.dataset.pauseMusic) && audioElement) {
+        audioElement.pause();
+        pauseButton.disabled = true;
+        const playControl = document.querySelector('[data-play-music="' + String(currentTrackId).replace(/"/g, '\\"') + '"]');
+        if (playControl) playControl.textContent = "▶ PLAY";
+    } else {
+        alert("Play this song first, then pause it here.");
+    }
+    return;
+}
+
+const nextButton = event.target.closest("[data-next-music]");
+if (nextButton) {
+    event.preventDefault();
+    const visibleIds = Array.from(document.querySelectorAll(".music-track-card [data-play-music]"))
+        .map(button => String(button.dataset.playMusic));
+    playbackQueueIds = visibleIds;
+    refreshPlaylist();
+    const index = visibleIds.indexOf(String(nextButton.dataset.nextMusic));
+    const nextId = visibleIds[(index + 1) % visibleIds.length];
+    if (nextId) {
+        recordRecentlyPlayed(nextId);
+        await playTrack(nextId);
+    }
     return;
 }
 

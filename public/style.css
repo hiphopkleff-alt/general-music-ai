@@ -1155,3 +1155,31 @@ body.now-playing-fullscreen .full-player-back { cursor:pointer; }
  body.now-playing-fullscreen .full-player-controls { margin:16px 0; }
  body.now-playing-fullscreen .full-player-secondary { margin:0 auto; }
 }
+
+
+/* SHUFFLE AND REPEAT PLAYER MODES */
+.player-controls .player-mode-btn {
+    width:34px;
+    min-width:34px;
+    height:34px;
+    padding:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(56,216,255,.22);
+    border-radius:9px;
+    background:rgba(37,140,255,.08);
+    color:#9bb2cc;
+    font-size:15px;
+    cursor:pointer;
+}
+.player-controls .player-mode-btn.is-active {
+    color:#65ffc0;
+    border-color:rgba(53,255,173,.55);
+    background:rgba(53,255,173,.12);
+    box-shadow:0 0 12px rgba(53,255,173,.12);
+}
+@media(max-width:600px) {
+    .player-controls { gap:8px; }
+    .player-controls .player-mode-btn { width:29px; min-width:29px; height:29px; font-size:13px; }
+}

@@ -787,3 +787,81 @@ button {
     border-color: var(--cyan);
     box-shadow: 0 0 0 3px rgba(25,217,255,.12);
 }
+
+
+/* LYRICS STUDIO SONGWRITING WORKSPACE */
+.lyrics-workspace-note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 8px 0 16px;
+}
+.lyrics-structure-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    margin: 14px 0;
+}
+.lyrics-structure-tools label {
+    grid-column: 1 / -1;
+    color: #e8f2ff;
+    font-size: 13px;
+    font-weight: bold;
+}
+.lyrics-structure-tools select {
+    width: 100%;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #09152d;
+    color: white;
+}
+.lyrics-structure-tools .lyrics-action-btn {
+    width: auto;
+    white-space: nowrap;
+    margin: 0;
+}
+.lyrics-section-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 10px;
+}
+.lyrics-section-tools span {
+    width: 100%;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: .5px;
+}
+.lyrics-section-tools button {
+    padding: 9px 12px;
+    border: 1px solid rgba(25,217,255,.28);
+    border-radius: 20px;
+    background: rgba(25,217,255,.08);
+    color: var(--cyan);
+    font-size: 12px;
+}
+.lyrics-section-tools button:active {
+    background: rgba(25,217,255,.22);
+}
+.lyrics-editor-meta {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 11px;
+}
+@media(max-width:650px) {
+    .lyrics-structure-tools {
+        grid-template-columns: 1fr;
+    }
+    .lyrics-structure-tools .lyrics-action-btn {
+        width: 100%;
+    }
+}

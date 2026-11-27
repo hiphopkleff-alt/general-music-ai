@@ -1287,3 +1287,57 @@ body.now-playing-fullscreen .full-player-back { cursor:pointer; }
     #globalPlayer .player-controls .player-mode-btn { width:25px; min-width:25px; }
     #globalPlayer .player-controls .play-btn { width:29px; min-width:29px; }
 }
+
+
+/* TARGETED MOBILE CONTROL VISIBILITY — preserve the player's existing width */
+@media (max-width: 650px) {
+  #globalPlayer {
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+  }
+  #globalPlayer .now-playing {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  #globalPlayer .player-controls {
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    gap: 2px !important;
+    justify-content: flex-end !important;
+    overflow: visible !important;
+  }
+  #globalPlayer .player-controls > button {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex: 0 0 25px !important;
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 30px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+  }
+  #globalPlayer .player-controls > #playPauseBtn {
+    flex-basis: 29px !important;
+    width: 29px !important;
+    min-width: 29px !important;
+    max-width: 29px !important;
+    height: 29px !important;
+  }
+  #globalPlayer .player-controls > #shuffleToggle,
+  #globalPlayer .player-controls > #repeatToggle,
+  #globalPlayer .player-controls > #queueToggle {
+    flex-basis: 25px !important;
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 27px !important;
+    font-size: 12px !important;
+  }
+}

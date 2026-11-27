@@ -2158,7 +2158,7 @@ if (
 
 function updateLyricsMeta() {
     const value = editor.value || "";
-    const words = value.trim() ? value.trim().split(/\\s+/).length : 0;
+    const words = value.trim() ? value.trim().split(/\s+/).length : 0;
     if (wordCount) wordCount.textContent = words + " words · " + value.length + " characters";
 }
 
@@ -2187,7 +2187,7 @@ editor.addEventListener("input", () => {
 document.querySelectorAll("[data-lyrics-section]").forEach(button => {
     button.addEventListener("click", () => {
         const section = button.getAttribute("data-lyrics-section");
-        const insertion = (editor.value.trim() ? "\\n\\n" : "") + "[" + section.toUpperCase() + "]\\n";
+        const insertion = (editor.value.trim() ? "\n\n" : "") + "[" + section.toUpperCase() + "]\n";
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
         editor.setRangeText(insertion, start, end, "end");
@@ -2202,9 +2202,9 @@ if (insertStructureButton && structureSelect) {
     insertStructureButton.addEventListener("click", () => {
         if (editor.value.trim() && !confirm("Insert a song structure at the end of your current lyrics?")) return;
         const sections = structureSelect.value.split(",").map(item => item.trim());
-        const structure = sections.map(section => "[" + section.toUpperCase() + "]\\n\\n").join("");
-        const prefix = editor.value.trim() ? "\\n\\n" : "";
-        editor.value = editor.value.replace(/\\s+$/, "") + prefix + structure;
+        const structure = sections.map(section => "[" + section.toUpperCase() + "]\n\n").join("");
+        const prefix = editor.value.trim() ? "\n\n" : "";
+        editor.value = editor.value.replace(/\s+$/, "") + prefix + structure;
         editor.focus();
         editor.setSelectionRange(editor.value.length, editor.value.length);
         updateLyricsMeta();

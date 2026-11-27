@@ -1341,3 +1341,14 @@ body.now-playing-fullscreen .full-player-back { cursor:pointer; }
     font-size: 12px !important;
   }
 }
+
+
+/* SLEEP TIMER — contained in the playback queue, no global-player layout changes */
+.sleep-timer-box{padding:12px;border:1px solid rgba(56,216,255,.2);border-radius:11px;background:rgba(37,140,255,.06)}
+.sleep-timer-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;color:#dff8ff;font-size:10px;letter-spacing:1px}
+.sleep-timer-heading span{color:#65ffc0;font-size:10px;font-weight:900;letter-spacing:.5px}
+.sleep-timer-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sleep-timer-options button,.sleep-timer-cancel{min-height:34px;padding:6px 5px;border:1px solid rgba(56,216,255,.24);border-radius:7px;background:rgba(37,140,255,.1);color:#dff8ff;font-size:9px;font-weight:900}
+.sleep-timer-options button:last-child{grid-column:1/-1;color:#65ffc0;border-color:rgba(53,255,173,.3)}
+.sleep-timer-cancel{width:100%;margin-top:7px;border-color:rgba(255,120,120,.25);background:rgba(255,80,80,.07);color:#ffc0c0}
+.sleep-timer-cancel:disabled{opacity:.35;cursor:not-allowed}

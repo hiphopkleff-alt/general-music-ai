@@ -1795,6 +1795,13 @@ if (String(currentTrackId) === String(id)) {
 saveFavorites(getFavorites().filter(item => item !== String(id)));
 const recentTracks = getRecentlyPlayed().filter(item => item !== String(id));
 localStorage.setItem(RECENT_KEY, JSON.stringify(recentTracks));
+const deletedTrack = getSavedTasks().find(item => String(item.id) === String(id));
+if (deletedTrack && deletedTrack.audioBlobId) {
+    const blobId = String(deletedTrack.audioBlobId);
+    deleteLocalAudio(blobId).catch(error => console.warn("Local audio cleanup:", error));
+    const cachedURL = localAudioURLs.get(blobId);
+    if (cachedURL) { URL.revokeObjectURL(cachedURL); localAudioURLs.delete(blobId); }
+}
 const playlistsAfterDelete = getCustomPlaylists().map(item => ({
     ...item,
     trackIds: (item.trackIds || []).filter(trackId => String(trackId) !== String(id))

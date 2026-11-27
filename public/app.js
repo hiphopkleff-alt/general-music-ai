@@ -1948,6 +1948,7 @@ if (removeFromPlaylistButton) {
     if (playlist) {
         playlist.trackIds = playlist.trackIds.filter(id => String(id) !== String(removeFromPlaylistButton.dataset.removeFromPlaylist));
         saveCustomPlaylists(playlists);
+        if (String(activePlaylistId) === String(playlist.id)) playbackQueueIds = [...playlist.trackIds];
         renderMusicCollection();
     }
     return;

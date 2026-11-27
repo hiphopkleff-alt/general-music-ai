@@ -642,6 +642,11 @@ create: `
                         <option>Highlife</option>
                         <option>Jazz</option>
                         <option>Electronic</option>
+                        <option>Afro-fusion</option>
+                        <option>Dancehall</option>
+                        <option>Drill</option>
+                        <option>Trap</option>
+                        <option>Soul</option>
                     </select>
                 </div>
 
@@ -652,6 +657,36 @@ create: `
                         <option value="male">Male Vocals</option>
                         <option value="female">Female Vocals</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="form-row smart-controls">
+                <div>
+                    <label for="songMood">Song Mood</label>
+                    <select id="songMood">
+                        <option value="uplifting and energetic">Uplifting</option>
+                        <option value="romantic and emotional">Romantic</option>
+                        <option value="inspirational and motivational">Inspirational</option>
+                        <option value="dark and intense">Dark</option>
+                        <option value="chill and relaxing">Chill</option>
+                        <option value="party-ready and vibrant">Party</option>
+                        <option value="soulful and reflective">Soulful</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="songTempo">Tempo</label>
+                    <select id="songTempo">
+                        <option value="mid-tempo">Mid-tempo</option>
+                        <option value="slow">Slow</option>
+                        <option value="upbeat">Upbeat</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+            </div>
+
+            <label for="songInstruments">Preferred Instruments (optional)</label>
+            <input id="songInstruments" type="text" maxlength="180"
+                placeholder="e.g. talking drum, piano, guitar, deep bass">
                 </div>
 
             </div>
@@ -1537,10 +1572,21 @@ form.addEventListener("submit", async event => {
     event.preventDefault();
 
     const title = document.getElementById("songTitle").value.trim();
-    const prompt = document.getElementById("musicPrompt").value.trim();
+    const basePrompt = document.getElementById("musicPrompt").value.trim();
     const lyrics = document.getElementById("songLyrics").value.trim();
+    const genre = document.getElementById("genre").value;
+    const mood = document.getElementById("songMood")?.value || "uplifting and energetic";
+    const tempo = document.getElementById("songTempo")?.value || "mid-tempo";
+    const instruments = document.getElementById("songInstruments")?.value.trim();
     const gender = document.getElementById("vocal").value;
     const model = document.getElementById("musicModel").value;
+    const prompt = [
+        basePrompt,
+        "Genre: " + genre + ".",
+        "Mood: " + mood + ".",
+        "Tempo: " + tempo + ".",
+        instruments ? "Preferred instruments: " + instruments + "." : ""
+    ].filter(Boolean).join(" ");
 
     const status = document.getElementById("generationStatus");
 

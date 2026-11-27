@@ -769,3 +769,21 @@ button {
     }
 
     }
+
+
+/* SMART MUSIC GENERATOR CONTROLS */
+.smart-controls { margin-top: 4px; }
+.smart-controls select, #songInstruments { width: 100%; }
+#songInstruments {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 13px;
+    margin: 8px 0 18px;
+    outline: none;
+}
+#songInstruments:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(25,217,255,.12);
+}

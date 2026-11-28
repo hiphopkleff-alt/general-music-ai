@@ -345,61 +345,75 @@ body[data-studio-mode="mixing"] .record-button{background:#35132c!important;bord
 }
 
 
-/* Brighter, individually colored multitrack channels */
-body[data-studio-mode="mixing"] .starter-channels{background:linear-gradient(180deg,#061633,#04112a)!important}
+/* EXTRA-BRIGHT NEON CHANNEL STRIPS */
+body[data-studio-mode="mixing"] .starter-channels{
+ background:linear-gradient(180deg,#071b42,#06132f)!important;
+ padding:12px!important
+}
 body[data-studio-mode="mixing"] .starter-channel{
- background:linear-gradient(105deg,#103b78 0%,#0b2d60 55%,#08234c 100%)!important;
- border:1px solid #287de0!important;border-left:5px solid #00d9ff!important;
- box-shadow:0 0 13px #087cff38,inset 0 1px 0 #8bdcff24!important
+ background:linear-gradient(105deg,#176bdb 0%,#104ca9 52%,#0b347a 100%)!important;
+ border:1px solid #55baff!important;border-left:6px solid #00eaff!important;
+ box-shadow:0 0 18px #078cff70,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(2){
- background:linear-gradient(105deg,#382078,#241653 60%,#17113f)!important;
- border-color:#855bff!important;border-left-color:#b16cff!important;
- box-shadow:0 0 13px #854bff38,inset 0 1px 0 #d8baff24!important
+ background:linear-gradient(105deg,#8248ec,#592bc1 55%,#351c85)!important;
+ border-color:#c19aff!important;border-left-color:#e0a0ff!important;
+ box-shadow:0 0 18px #a15cff70,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(3){
- background:linear-gradient(105deg,#075b4c,#064335 60%,#062e32)!important;
- border-color:#16d99a!important;border-left-color:#20f5a2!important;
- box-shadow:0 0 13px #10d99a35,inset 0 1px 0 #9affd524!important
+ background:linear-gradient(105deg,#08a879,#087c61 55%,#075344)!important;
+ border-color:#69ffd0!important;border-left-color:#52ffb8!important;
+ box-shadow:0 0 18px #12e6a070,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(4){
- background:linear-gradient(105deg,#704014,#4d2b0d 60%,#321d12)!important;
- border-color:#ffad32!important;border-left-color:#ffc04d!important;
- box-shadow:0 0 13px #ff9b2635,inset 0 1px 0 #ffe0a024!important
+ background:linear-gradient(105deg,#e78a20,#bd5b12 55%,#80370d)!important;
+ border-color:#ffd27b!important;border-left-color:#ffe05a!important;
+ box-shadow:0 0 18px #ff9d3670,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(5){
- background:linear-gradient(105deg,#07547b,#073b62 60%,#08294b)!important;
- border-color:#13c9f4!important;border-left-color:#00e5ff!important;
- box-shadow:0 0 13px #00cfff38,inset 0 1px 0 #a4f5ff24!important
+ background:linear-gradient(105deg,#08a9d8,#0876b7 55%,#07518a)!important;
+ border-color:#74edff!important;border-left-color:#00f0ff!important;
+ box-shadow:0 0 18px #00cfff70,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(6){
- background:linear-gradient(105deg,#07543d,#063d32 60%,#062c2b)!important;
- border-color:#23d879!important;border-left-color:#58ff91!important;
- box-shadow:0 0 13px #23d87935,inset 0 1px 0 #b7ffd024!important
+ background:linear-gradient(105deg,#20b95b,#118443 55%,#075d38)!important;
+ border-color:#9aff9d!important;border-left-color:#65ff78!important;
+ box-shadow:0 0 18px #35ec6a70,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(7){
- background:linear-gradient(105deg,#65164f,#47123f 60%,#2e123d)!important;
- border-color:#ef4dbb!important;border-left-color:#ff5dc8!important;
- box-shadow:0 0 13px #ef4dbb35,inset 0 1px 0 #ffc1eb24!important
+ background:linear-gradient(105deg,#d934a4,#a91c7c 55%,#70185f)!important;
+ border-color:#ff9ce3!important;border-left-color:#ff65d1!important;
+ box-shadow:0 0 18px #f23bb870,inset 0 1px 0 #ffffff55!important
 }
 body[data-studio-mode="mixing"] .starter-channel:nth-child(8){
- background:linear-gradient(105deg,#302080,#20175a 60%,#15133e)!important;
- border-color:#8c73ff!important;border-left-color:#a98cff!important;
- box-shadow:0 0 13px #8064ff38,inset 0 1px 0 #d0c3ff24!important
+ background:linear-gradient(105deg,#6552e8,#4032b5 55%,#29217e)!important;
+ border-color:#b4aaff!important;border-left-color:#a99aff!important;
+ box-shadow:0 0 18px #7565ff70,inset 0 1px 0 #ffffff55!important
+}
+body[data-studio-mode="mixing"] .starter-channel-info strong{
+ color:#fff!important;text-shadow:0 1px 5px #00102c,0 0 8px #ffffff55!important
+}
+body[data-studio-mode="mixing"] .starter-channel-info small{
+ color:#f1f7ff!important;text-shadow:0 1px 4px #00102c!important
 }
 body[data-studio-mode="mixing"] .starter-channel-number{
- background:#071a3b!important;color:#fff!important;border:1px solid #5caaff;
- box-shadow:0 0 10px #168cff65!important
+ background:#061b3e!important;color:#fff!important;border:1px solid #c6edff!important;
+ box-shadow:0 0 13px #00cfff90!important
 }
-body[data-studio-mode="mixing"] .starter-channel-info strong{color:#fff!important;text-shadow:0 1px 5px #0009}
-body[data-studio-mode="mixing"] .starter-channel-info small{color:#d1e7ff!important}
 body[data-studio-mode="mixing"] .starter-timeline{
- background-color:#061633!important;
- border:1px solid #4389d5!important;
- box-shadow:inset 0 0 12px #147dff18
+ background-color:#071a3d!important;
+ border:1px solid #69bdff!important;
+ box-shadow:inset 0 0 18px #168dff35,0 0 8px #168dff40!important
 }
-body[data-studio-mode="mixing"] .starter-timeline:after{color:#a9ceff!important}
+body[data-studio-mode="mixing"] .starter-timeline:after{
+ color:#d6ecff!important;text-shadow:0 0 7px #168dff!important
+}
 body[data-studio-mode="mixing"] .starter-timeline.has-audio{
- border-color:#38cfff!important;
- box-shadow:inset 0 0 15px #078cff30,0 0 9px #078cff28!important
+ border:1px solid #64edff!important;
+ box-shadow:inset 0 0 20px #08aaff55,0 0 13px #08aaff65!important
+}
+body[data-studio-mode="mixing"] .starter-channel-actions button{
+ background:linear-gradient(180deg,#124b91,#082b5e)!important;
+ color:#fff!important;border-color:#65caff!important;
+ box-shadow:0 0 7px #168dff55!important
 }

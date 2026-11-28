@@ -417,3 +417,16 @@ body[data-studio-mode="mixing"] .starter-channel-actions button{
  color:#fff!important;border-color:#65caff!important;
  box-shadow:0 0 7px #168dff55!important
 }
+
+
+/* Audio import progress overlay */
+.gt-import-progress{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,9,22,.82);backdrop-filter:blur(7px)}
+.gt-import-progress.is-visible{display:flex}
+.gt-import-box{width:min(440px,100%);padding:25px;border:1px solid #35c8ff;border-radius:18px;background:linear-gradient(145deg,#102b4d,#07172c);box-shadow:0 0 32px rgba(27,174,255,.28);color:#f5fbff}
+.gt-import-kicker{font-size:10px;font-weight:800;letter-spacing:2px;color:#53dcff}
+.gt-import-title{display:block;margin-top:9px;font-size:20px;letter-spacing:.7px}
+.gt-import-file{margin:13px 0 18px;color:#c5e8ff;font-size:13px;overflow-wrap:anywhere}
+.gt-import-track{height:13px;overflow:hidden;border:1px solid #318fc5;border-radius:99px;background:#07101e}
+.gt-import-track i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#00c8ff,#48ffbd);box-shadow:0 0 14px rgba(0,220,255,.8);transition:width .12s linear}
+.gt-import-meta{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:11px;font-weight:800;letter-spacing:.7px;color:#9edfff}
+.gt-import-meta b{font-size:15px;color:#fff}

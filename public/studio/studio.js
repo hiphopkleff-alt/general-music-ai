@@ -71,8 +71,6 @@
   if(loudMode){loudMode.value="manual";const label=loudMode.closest("label");if(label)label.hidden=true}
   if(presetWrap)presetWrap.hidden=false;
   const target=$("loudTarget"),ceiling=$("peakCeiling");if(target)target.disabled=false;if(ceiling)ceiling.disabled=false;
-  // The original Loudness Control preset listener is replaced with an independent loudness-only action.
-  if(loudPreset){const fresh=loudPreset.cloneNode(true);loudPreset.parentNode.replaceChild(fresh,loudPreset);fresh.addEventListener("change",()=>{applyLoudnessProfile();status("LOUDNESS PRESET APPLIED · "+fresh.options[fresh.selectedIndex].text.toUpperCase())})}
  }
 
  const status=t=>$("status").textContent=t;

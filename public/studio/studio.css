@@ -12,3 +12,8 @@
 .plugin-menu summary span{color:var(--muted);font-size:9px;font-weight:600}.plugin-menu .controls{padding:10px;border-top:1px solid #1e3a57;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .track.silent{opacity:.72}.track.silent canvas{opacity:.5}
 @media(max-width:650px){.track{grid-template-columns:minmax(0,1fr)}.track-name,.track canvas,.track>div:last-child{grid-column:1;grid-row:auto}.track canvas{height:54px}.plugin-menu .controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Audio processing plug-ins */
+.plugin-menu .controls{grid-template-columns:repeat(4,minmax(0,1fr))}
+.plugin-menu .control:nth-child(n+9){border-top:1px solid #1d3c58;padding-top:8px}
+@media(max-width:650px){.plugin-menu .controls{grid-template-columns:repeat(2,minmax(0,1fr))}}

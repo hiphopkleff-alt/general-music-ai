@@ -3538,6 +3538,30 @@ function navigate(page, isBackNavigation = false) {
 
 
 /* ==========================================
+PROFESSIONAL STUDIO SUBMENU
+========================================== */
+document.addEventListener("click", event => {
+    const trigger = event.target.closest("#professionalStudioTrigger");
+    const dropdown = document.getElementById("professionalStudioNav");
+    const menu = document.getElementById("professionalStudioMenu");
+    if (!dropdown || !menu) return;
+    if (trigger) {
+        const open = !dropdown.classList.contains("open");
+        dropdown.classList.toggle("open", open);
+        trigger.setAttribute("aria-expanded", String(open));
+        menu.hidden = !open;
+        event.preventDefault();
+        return;
+    }
+    if (!event.target.closest("#professionalStudioNav")) {
+        dropdown.classList.remove("open");
+        const button = document.getElementById("professionalStudioTrigger");
+        if (button) button.setAttribute("aria-expanded", "false");
+        menu.hidden = true;
+    }
+});
+
+/* ==========================================
 NAVIGATION CLICK HANDLER
 ========================================== */
 

@@ -20,7 +20,7 @@
   unknown:{label:"Unclassified / Full Mix",keys:[],settings:null}
  };
  const roles=Object.entries(roleData);
- const detect=name=>{const n=String(name||"").toLowerCase().replace(/[_-]+/g," ");for(const [key,r] of roles){if(key==="unknown")continue;if(r.keys.some(k=>new RegExp("(^|\\W)"+k.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&")+"($|\\W)","i").test(n)))return key;}return "unknown"};
+ const detect=name=>{const n=String(name||"").toLowerCase().replace(/[_-]+/g," ");if(/\\b(backing|bgv|bvox|choir|harmony|harmonies)\\b/.test(n))return "backing";for(const [key,r] of roles){if(key==="unknown")continue;if(r.keys.some(k=>new RegExp("(^|\\W)"+k.replace(/[.*+?^${}()|[\\]\\]/g,"\\$&")+"($|\\W)","i").test(n)))return key;}return "unknown"};
  function measure(buffer){
   const d=buffer.getChannelData(0),stride=Math.max(1,Math.floor(d.length/24000));let sum=0,peak=0,lo=0,mid=0,hi=0,lp=0,mp=0,n=0;
   for(let i=0;i<d.length;i+=stride){const x=d[i],a=Math.abs(x);sum+=x*x;peak=Math.max(peak,a);lp=lp*.94+x*.06;mp=mp*.72+(x-lp)*.28;const h=x-lp-mp;lo+=lp*lp;mid+=mp*mp;hi+=h*h;n++}

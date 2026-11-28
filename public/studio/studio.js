@@ -18,15 +18,15 @@
  function initMasterUI(){document.querySelectorAll("[data-stereo-control]").forEach(el=>el.addEventListener("input",()=>{const key=el.dataset.stereoControl;masterSettings[key]=Number(el.value);const out=$(key==="stereoWidth"?"stereoWidthValue":"stereoBalanceValue");if(out)out.textContent=key==="stereoWidth"?Math.round(masterSettings[key]*100)+"%":(masterSettings[key]===0?"CENTER":masterSettings[key]<0?"L "+Math.round(-masterSettings[key]*100):"R "+Math.round(masterSettings[key]*100));applyMasterSettings()}));$("stereoPreset")?.addEventListener("change",e=>{const p={mono:{width:0,balance:0},narrow:{width:.65,balance:0},natural:{width:1,balance:0},wide:{width:1.35,balance:0},ultra:{width:1.7,balance:0}}[e.target.value];if(p){Object.assign(masterSettings,{stereoWidth:p.width,stereoBalance:p.balance});for(const [k,v] of Object.entries(p)){const el=document.querySelector(`[data-stereo-control="${k==="width"?"stereoWidth":"stereoBalance"}"]`);if(el)el.value=v;const out=$(k==="width"?"stereoWidthValue":"stereoBalanceValue");if(out)out.textContent=k==="width"?Math.round(v*100)+"%":"CENTER"}applyMasterSettings();status("STEREO PRESET APPLIED · "+e.target.options[e.target.selectedIndex].text.toUpperCase())}});const select=$("masterPreset");if(select){select.innerHTML=Object.entries(MASTER_PRESETS).map(([k,p])=>`<option value="${k}">${p.label}</option>`).join("");select.value="balanced"}document.querySelectorAll("[data-master-control]").forEach(el=>{el.addEventListener("input",()=>setMasterControl(el.dataset.masterControl,el.value))});document.querySelectorAll("[data-master-limiter]").forEach(el=>{el.addEventListener("input",()=>setMasterControl(el.dataset.masterLimiter,el.value))});$("limiterPreset")?.addEventListener("change",e=>{const p={transparent:{threshold:-1,release:100,input:0},gentle:{threshold:-2,release:160,input:1},punchy:{threshold:-1.5,release:65,input:2},loud:{threshold:-3,release:90,input:4},aggressive:{threshold:-5,release:45,input:6}}[e.target.value];if(p){masterSettings.limiterThreshold=p.threshold;masterSettings.limiterRelease=p.release;masterSettings.limiterInput=p.input;for(const [k,v] of Object.entries({limiterThreshold:p.threshold,limiterRelease:p.release,limiterInput:p.input})){const el=document.querySelector(`[data-master-limiter="${k}"]`);if(el)el.value=v;const out=document.querySelector(`[data-master-value="${k}"]`);if(out)out.textContent=k==="limiterRelease"?v+" ms":v.toFixed(1)+" dB"}applyMasterSettings();status("LIMITER PRESET APPLIED · "+e.target.options[e.target.selectedIndex].text.toUpperCase())}});$("applyMasterPreset")?.addEventListener("click",()=>applyPreset(select.value));$("autoMasterAnalyze")?.addEventListener("click",()=>{const k=smartAnalyze();if(k)applyPreset(k)});$("masterAB")?.addEventListener("click",()=>setMasterBypass(!masterSettings.bypass));$("analyzeMaster")?.addEventListener("click",analyzeMaster);const loudMode=$("loudnessMode"),loudPreset=$("loudnessPreset"),presetWrap=$("loudnessPresetWrap"),targetEl=$("loudTarget"),ceilingEl=$("peakCeiling");const loudProfiles={"streaming-balanced":{target:-14,ceiling:-1,limiter:"transparent"},"streaming-dynamic":{target:-16,ceiling:-1.5,limiter:"gentle"},"streaming-loud":{target:-12,ceiling:-1,limiter:"punchy"},afrobeats:{target:-14,ceiling:-1,limiter:"punchy"},hiphop:{target:-12,ceiling:-1,limiter:"punchy"},dance:{target:-10,ceiling:-1,limiter:"loud"},vocal:{target:-14,ceiling:-1.5,limiter:"gentle"},podcast:{target:-16,ceiling:-2,limiter:"gentle"},acoustic:{target:-18,ceiling:-2,limiter:"transparent"},highlife:{target:-14,ceiling:-1.5,limiter:"gentle"},loud:{target:-9,ceiling:-1,limiter:"aggressive"},safe:{target:-16,ceiling:-2,limiter:"transparent"}};function syncLoudnessMode(){const automatic=loudMode?.value==="automatic";if(presetWrap)presetWrap.hidden=!automatic;if(targetEl)targetEl.disabled=automatic;if(ceilingEl)ceilingEl.disabled=automatic;if(automatic)applyLoudnessProfile()}function applyLoudnessProfile(){const p=loudProfiles[loudPreset?.value];if(!p)return;if(targetEl)targetEl.value=String(p.target);if(ceilingEl)ceilingEl.value=String(p.ceiling);const state=$("loudnessStatus");if(state)state.textContent="LOUDNESS PROFILE APPLIED · "+loudPreset.options[loudPreset.selectedIndex].text.toUpperCase()+" · NORMALIZATION READY"}loudMode?.addEventListener("change",syncLoudnessMode);loudPreset?.addEventListener("change",()=>applyLoudnessProfile());syncLoudnessMode();initMasteringChannel(loudProfiles,applyPreset,applyLoudnessProfile);}
 
  function initMasteringChannel(loudProfiles,applyMasterPreset,applyLoudnessProfile){
-  const main=document.querySelector("main"),master=document.querySelector(".mastering"),limiter=document.querySelector(".limiter-panel"),stereo=document.querySelector(".stereo-panel");
-  if(!main||!master||$("masteringChannelShell")){console.warn("Mastering Channel initialization deferred: required Studio elements not ready.",{main:!!main,master:!!master,limiter:!!limiter,stereo:!!stereo});return;}
-  const shell=document.createElement("section");shell.id="masteringChannelShell";shell.className="mastering-channel-shell";
-  const trigger=document.createElement("button");trigger.type="button";trigger.className="mastering-channel-trigger";trigger.setAttribute("aria-expanded","false");trigger.innerHTML='<span><small>PROFESSIONAL STUDIO</small><strong>MASTERING CHANNEL</strong><em>Choose your mastering workflow</em></span><b class="mastering-chevron">＋</b>';
-  const body=document.createElement("div");body.className="mastering-channel-body";body.hidden=true;
-  const modes=document.createElement("div");modes.className="master-mode-tabs";modes.innerHTML='<button type="button" class="master-mode-button" data-master-mode="authentic" aria-pressed="false"><strong>✦ AUTHENTIC MASTERING</strong><small>One selection configures the complete mastering chain</small></button><button type="button" class="master-mode-button" data-master-mode="manual" aria-pressed="false"><strong>⚙ MANUAL MASTERING</strong><small>Control each mastering processor independently</small></button>';
-  const manual=document.createElement("div");manual.className="manual-mastering-content";manual.hidden=true;
-  const automatic=document.createElement("section");automatic.className="authentic-mastering-panel";automatic.hidden=true;
-  automatic.innerHTML='<div class="authentic-heading"><div><small>ONE-CLICK MASTERING SYSTEM</small><h2>AUTHENTIC MASTERING</h2><p>Choose a profile to configure the Master Channel, Loudness Control, Limiter and Stereo Imaging together.</p></div><span>4 PROCESSORS · 1 PRESET</span></div><label class="authentic-preset-label">MASTERING PROFILE<select id="authenticMasterPreset"></select></label><div class="authentic-actions"><span id="authenticMasterStatus">READY · SELECT A MASTERING PROFILE</span><button type="button" id="applyAuthenticMaster" class="authentic-apply">APPLY MASTERING</button></div><div class="authentic-includes"><span>✓ MASTER CHANNEL</span><span>✓ LOUDNESS CONTROL 3.0</span><span>✓ LIMITER 4.0</span><span>✓ STEREO IMAGING 5.0</span></div><p class="authentic-disclaimer">Profiles are professional starting points. Always audition the result and adjust for the recording; mastering cannot repair every source-mix issue.</p>';
+  // The mastering interface is static HTML. JavaScript only connects controls;
+  // it never creates, moves, or replaces the processor panels.
+  const shell=$("masteringChannelShell"),trigger=$("masteringChannelTrigger"),body=$("masteringChannelBody");
+  const chevron=$("masteringChannelChevron"),modes=shell?.querySelector(".master-mode-tabs");
+  const manual=$("manualMasteringContent"),automatic=$("authenticMasteringPanel"),preset=$("authenticMasterPreset");
+  if(!shell||!trigger||!body||!modes||!manual||!automatic||!preset){
+   console.error("Static Mastering Channel markup is incomplete.",{shell:!!shell,trigger:!!trigger,body:!!body,modes:!!modes,manual:!!manual,automatic:!!automatic,preset:!!preset});
+   return false;
+  }
   const masterProfiles={
    balanced:{label:"Balanced Streaming Master",master:"balanced",loud:"streaming-balanced",limiter:"transparent",stereo:"natural"},
    afrobeats:{label:"Afrobeats Master",master:"afrobeats",loud:"afrobeats",limiter:"punchy",stereo:"wide"},
@@ -47,30 +47,31 @@
    cinematic:{label:"Cinematic Master",master:"cinematic",loud:"streaming-dynamic",limiter:"gentle",stereo:"ultra"},
    vocal:{label:"Vocal Clarity Master",master:"vocal",loud:"vocal",limiter:"gentle",stereo:"natural"}
   };
-  const preset=$("authenticMasterPreset");preset.innerHTML=Object.entries(masterProfiles).map(([key,p])=>'<option value="'+key+'">'+p.label+'</option>').join("");
-  const applyAuthentic=()=>{const key=preset.value,p=masterProfiles[key];if(!p)return;
+  preset.innerHTML=Object.entries(masterProfiles).map(([key,p])=>'<option value="'+key+'">'+p.label+'</option>').join("");
+  const applyAuthentic=()=>{
+   const key=preset.value,p=masterProfiles[key];if(!p)return;
    const masterSelect=$("masterPreset");if(masterSelect)masterSelect.value=p.master;applyMasterPreset(p.master);
    const loudMode=$("loudnessMode"),loudPreset=$("loudnessPreset"),normalize=$("normalizeOnExport");
    if(loudMode)loudMode.value="manual";if(loudPreset)loudPreset.value=p.loud;applyLoudnessProfile();if(normalize)normalize.checked=true;
    const limiterSelect=$("limiterPreset");if(limiterSelect){limiterSelect.value=p.limiter;limiterSelect.dispatchEvent(new Event("change"))}
    const stereoSelect=$("stereoPreset");if(stereoSelect){stereoSelect.value=p.stereo;stereoSelect.dispatchEvent(new Event("change"))}
-   const label=masterProfiles[key].label.toUpperCase();$("authenticMasterStatus").textContent="APPLIED · "+label+" · ALL FOUR PROCESSORS CONFIGURED";status("AUTHENTIC MASTERING APPLIED · "+label);
+   const label=p.label.toUpperCase();$("authenticMasterStatus").textContent="APPLIED · "+label+" · ALL FOUR PROCESSORS CONFIGURED";status("AUTHENTIC MASTERING APPLIED · "+label);
   };
-  const setMode=mode=>{manual.hidden=mode!=="manual";automatic.hidden=mode!=="authentic";modes.querySelectorAll("[data-master-mode]").forEach(b=>{const active=b.dataset.masterMode===mode;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active))});
+  const setMode=mode=>{
+   manual.hidden=mode!=="manual";automatic.hidden=mode!=="authentic";
+   modes.querySelectorAll("[data-master-mode]").forEach(button=>{const active=button.dataset.masterMode===mode;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))});
    const loudMode=$("loudnessMode"),presetWrap=$("loudnessPresetWrap"),target=$("loudTarget"),ceiling=$("peakCeiling");
    if(loudMode){loudMode.value="manual";const label=loudMode.closest("label");if(label)label.hidden=true}
    if(presetWrap)presetWrap.hidden=false;if(target)target.disabled=false;if(ceiling)ceiling.disabled=false;
    if(mode==="authentic"){if(preset.value)applyAuthentic()}else status("MANUAL MASTERING · EACH PROCESSOR IS INDEPENDENT");
   };
-  shell.append(trigger,body);body.append(modes,manual,automatic);main.insertBefore(shell,master);manual.append(master);if(limiter)manual.append(limiter);if(stereo)manual.append(stereo);
-  trigger.addEventListener("click",()=>{body.hidden=!body.hidden;trigger.setAttribute("aria-expanded",String(!body.hidden));trigger.querySelector(".mastering-chevron").textContent=body.hidden?"＋":"−";});
-  modes.querySelectorAll("[data-master-mode]").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.masterMode)));
+  trigger.addEventListener("click",()=>{body.hidden=!body.hidden;trigger.setAttribute("aria-expanded",String(!body.hidden));if(chevron)chevron.textContent=body.hidden?"＋":"−"});
+  modes.querySelectorAll("[data-master-mode]").forEach(button=>button.addEventListener("click",()=>setMode(button.dataset.masterMode)));
   preset.addEventListener("change",applyAuthentic);$("applyAuthenticMaster").addEventListener("click",applyAuthentic);
-  // Keep Loudness Control presets available in manual mode without coupling them to the Limiter preset.
-  const loudPreset=$("loudnessPreset"),loudMode=$("loudnessMode"),presetWrap=$("loudnessPresetWrap");
+  const loudMode=$("loudnessMode"),presetWrap=$("loudnessPresetWrap"),target=$("loudTarget"),ceiling=$("peakCeiling");
   if(loudMode){loudMode.value="manual";const label=loudMode.closest("label");if(label)label.hidden=true}
-  if(presetWrap)presetWrap.hidden=false;
-  const target=$("loudTarget"),ceiling=$("peakCeiling");if(target)target.disabled=false;if(ceiling)ceiling.disabled=false;
+  if(presetWrap)presetWrap.hidden=false;if(target)target.disabled=false;if(ceiling)ceiling.disabled=false;
+  return true;
  }
 
  const status=t=>$("status").textContent=t;

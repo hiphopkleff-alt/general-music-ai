@@ -430,3 +430,10 @@ body[data-studio-mode="mixing"] .starter-channel-actions button{
 .gt-import-track i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#00c8ff,#48ffbd);box-shadow:0 0 14px rgba(0,220,255,.8);transition:width .12s linear}
 .gt-import-meta{display:flex;justify-content:space-between;gap:12px;margin-top:11px;font-size:11px;font-weight:800;letter-spacing:.7px;color:#9edfff}
 .gt-import-meta b{font-size:15px;color:#fff}
+
+/* GLOBAL TRANSPORT + SINGLE PER-TRACK CONTROL SET */
+.transport #pauseBtn{border:1px solid #36d7ff;background:linear-gradient(135deg,#123e62,#146b91);color:#fff;font-weight:800;box-shadow:0 0 14px #20cfff35}
+.transport #pauseBtn:disabled{opacity:.4;box-shadow:none}
+.transport #seek{min-width:130px;accent-color:#20d8ff;cursor:pointer;height:9px}
+.starter-channel-actions{display:flex;gap:8px;align-items:center}
+.starter-channel-actions button{white-space:nowrap}

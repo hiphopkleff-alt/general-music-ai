@@ -127,3 +127,41 @@ body[data-studio-mode="mixing"] .mastering-stage,body[data-studio-mode="mixing"]
 
 .starter-loaded-tracks{grid-column:1/-1;display:grid;gap:8px;min-width:0;padding:0 0 4px 34px}.starter-loaded-tracks:empty{display:none}.starter-loaded-tracks .track{width:100%;margin:0;min-width:0}.starter-channel-info small{max-width:100%;overflow-wrap:anywhere}
 @media(max-width:650px){.starter-loaded-tracks{padding-left:0}.starter-loaded-tracks .track{padding:8px}}
+
+
+/* Premium multitrack console: richer channel surfaces and true in-lane clips */
+.starter-channels{padding:12px;background:linear-gradient(180deg,#081827,#0a1d2b)}
+.starter-channel{grid-template-columns:178px minmax(0,1fr);gap:12px;min-height:78px;padding:10px 12px;margin-bottom:9px;border:1px solid #28516a;border-left:3px solid #26cfa0;border-radius:10px;background:linear-gradient(105deg,#102b3d 0%,#102638 48%,#0d2235 100%);box-shadow:inset 0 1px 0 #ffffff0a,0 5px 14px #020b1470}
+.starter-channel:nth-child(even){background:linear-gradient(105deg,#142d40 0%,#10283a 50%,#0b2032 100%);border-left-color:#36bfe3}
+.starter-channel-info{align-self:center}
+.starter-channel-number{background:linear-gradient(145deg,#155a52,#123c4a);color:#79ffd0;box-shadow:0 0 12px #35ffad20}
+.starter-channel-info strong{color:#f0f8ff;font-size:10px;letter-spacing:.8px}
+.starter-channel-info small{color:#8eafc5;font-size:8px}
+.starter-timeline{min-width:0;min-height:46px;height:46px;overflow:visible;border:1px solid #31556d;border-radius:7px;background-color:#091b2b;background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(10% - 1px),#24445b calc(10% - 1px),#24445b 10%),linear-gradient(180deg,#0b2031,#0a1a29)}
+.starter-timeline:after{color:#7794a9;font-size:8px;letter-spacing:1.1px}
+.starter-timeline.has-audio{height:auto;min-height:80px;padding:5px 7px;border:1px solid #2d7d7a;background:linear-gradient(180deg,#0b2633,#0a1d2b);box-shadow:inset 0 0 0 1px #35ffad12}
+.starter-timeline.has-audio:after{display:none}
+.starter-timeline.has-audio .track{display:grid;grid-template-columns:minmax(105px,145px) minmax(0,1fr);grid-template-rows:auto auto;gap:5px 10px;width:100%;min-width:0;margin:0;padding:3px 4px;border:0;border-radius:5px;background:transparent;box-shadow:none}
+.starter-timeline.has-audio .track-name{grid-column:1;grid-row:1;min-width:0}
+.starter-timeline.has-audio .track-name strong{font-size:9px;color:#e9fff8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.starter-timeline.has-audio .track-name small{font-size:8px;color:#8fb6c4}
+.starter-timeline.has-audio .track-actions{gap:4px;margin-top:5px}
+.starter-timeline.has-audio .track-actions button{padding:3px 6px;font-size:8px;background:#123548;border-color:#326176;color:#c7e8f1}
+.starter-timeline.has-audio .track-actions button.active{background:#15523f;border-color:#35ffad;color:#8dffd0}
+.starter-timeline.has-audio .track canvas{grid-column:2;grid-row:1;align-self:center;width:100%;height:44px;border:1px solid #236b69;border-radius:5px;background:repeating-linear-gradient(90deg,#0b2835 0,#0b2835 9.8%,#194354 10%);display:block}
+.starter-timeline.has-audio .track>div:last-child{grid-column:1/-1;grid-row:2}
+.starter-timeline.has-audio .plugin-menu{margin-top:2px}
+.starter-timeline.has-audio .plugin-menu>summary{padding:5px 7px;background:#102e3b;border:1px solid #285768;border-radius:5px;color:#bceee5;font-size:8px}
+.starter-timeline.has-audio .plugin-picker{padding:6px;gap:5px;background:#0b2030;border-color:#25495d}
+.starter-timeline.has-audio .plugin-choice{padding:6px;font-size:8px;background:#123247;border-color:#31586a}
+.starter-channel-actions button{background:#15364a;color:#c5e2ed;border-color:#356078}
+.starter-channel-actions button:disabled{opacity:.6}
+@media(max-width:650px){
+ .starter-channels{padding:8px}
+ .starter-channel{grid-template-columns:1fr;gap:7px;padding:9px;border-left-width:3px}
+ .starter-timeline{min-height:40px;height:40px}
+ .starter-channel-actions{grid-column:1;margin:0 0 0 30px}
+ .starter-timeline.has-audio .track{grid-template-columns:1fr;gap:6px}
+ .starter-timeline.has-audio .track-name,.starter-timeline.has-audio .track canvas,.starter-timeline.has-audio .track>div:last-child{grid-column:1;grid-row:auto}
+ .starter-timeline.has-audio .track canvas{height:58px}
+}

@@ -71,10 +71,9 @@
       for (let i = 0; i < copy.length; i++) copy[i] *= gain;
       channels.push(copy);
     }
-    const out = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: buffer.sampleRate });
-    const normalized = out.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+    const bufferFactory = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, buffer.sampleRate);
+    const normalized = bufferFactory.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
     channels.forEach((data, ch) => normalized.copyToChannel(data, ch));
-    await out.close();
     const afterLufs = beforeLufs + applied;
     const afterPeak = beforePeak + applied;
     return { buffer: normalized, beforeLufs, afterLufs, beforePeak, afterPeak, gainDb: applied, targetLufs, ceilingDb, peakLimited: applied < wanted - .05 };

@@ -14,7 +14,7 @@ class GTStereoImager extends AudioWorkletProcessor{
    left[i]=outL;if(right!==left)right[i]=outR;
    ll+=outL*outL;rr+=outR*outR;lr+=outL*outR;mono+=(outL+outR)*.5*((outL+outR)*.5);stereo+=(outL*outL+outR*outR)*.5;
   }
-  if(++this.blocks%12===0){const corr=ll&&rr?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):0;const monoDb=stereo>1e-12?10*Math.log10(Math.max(1e-12,mono/(stereo/Math.max(1,left.length)))): -120;this.port.postMessage({correlation:corr,monoDb})}
+  if(++this.blocks%12===0){const corr=ll&&rr?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):0;const monoDb=stereo>1e-12?10*Math.log10(Math.max(1e-12,mono/Math.max(1,stereo))): -120;this.port.postMessage({correlation:corr,monoDb})}
   return true;
  }
 }

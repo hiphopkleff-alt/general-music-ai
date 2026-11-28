@@ -113,3 +113,11 @@
 
 /* Separate dedicated Recording & Mixing and Mastering pages */
 body[data-studio-mode="mixing"] .mastering-stage,body[data-studio-mode="mixing"] #masteringChannelShell,body[data-studio-mode="mixing"] #exportBtn{display:none!important}body[data-studio-mode="mastering"] .mixing-stage,body[data-studio-mode="mastering"] .workspace,body[data-studio-mode="mastering"] .notice,body[data-studio-mode="mastering"] #mixdownBtn,body[data-studio-mode="mastering"] #recordBtn{display:none!important}.record-button{border:1px solid #ff596f!important;background:rgba(120,20,42,.35)!important;color:#fff!important;font-weight:900}.record-button:active{background:#a91e3a!important}.record-status{font-size:10px;font-weight:800;letter-spacing:.7px;color:#ff8a9a;white-space:nowrap}.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* Expandable multitrack channel import */
+.add-channel-button{border:1px solid #35ffad;background:linear-gradient(135deg,#123c39,#102b43);color:#eafff7;border-radius:8px;padding:10px 13px;font-size:11px;font-weight:900;letter-spacing:.5px;cursor:pointer;white-space:nowrap}
+.add-channel-button:hover{border-color:#65ffc0;box-shadow:0 0 16px #35ffad22}
+.track-drop-zone{display:grid;gap:5px;place-items:center;text-align:center;margin:10px 0 13px;padding:15px 12px;border:1px dashed #287b91;border-radius:10px;background:linear-gradient(120deg,#0b2034,#0a1a2b);color:#38d8ff;cursor:pointer;transition:.18s}
+.track-drop-zone strong{font-size:10px;letter-spacing:1px}.track-drop-zone small{font-size:9px;color:#9eb4c9;line-height:1.5}
+.track-drop-zone.is-dragging{border-color:#35ffad;background:#10332f;box-shadow:inset 0 0 0 1px #35ffad55,0 0 18px #35ffad20}
+@media(max-width:650px){.add-channel-button{padding:9px 10px;font-size:10px}.track-drop-zone{padding:13px 9px}}

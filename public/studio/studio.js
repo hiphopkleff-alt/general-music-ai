@@ -48,8 +48,9 @@
    vocal:{label:"Vocal Clarity Master",master:"vocal",loud:"vocal",limiter:"gentle",stereo:"natural"}
   };
   preset.innerHTML=Object.entries(masterProfiles).map(([key,p])=>'<option value="'+key+'">'+p.label+'</option>').join("");
-  const applyAuthentic=()=>{
-   const key=preset.value,p=masterProfiles[key];if(!p)return;
+  const applyAuthentic=(selectedKey)=>{
+   const key=selectedKey||preset.value,p=masterProfiles[key];if(!p)return;
+   preset.value=key;
    const masterSelect=$("masterPreset");if(masterSelect)masterSelect.value=p.master;applyMasterPreset(p.master);
    const loudMode=$("loudnessMode"),loudPreset=$("loudnessPreset"),normalize=$("normalizeOnExport");
    if(loudMode)loudMode.value="manual";if(loudPreset)loudPreset.value=p.loud;applyLoudnessProfile();if(normalize)normalize.checked=true;
@@ -57,6 +58,57 @@
    const stereoSelect=$("stereoPreset");if(stereoSelect){stereoSelect.value=p.stereo;stereoSelect.dispatchEvent(new Event("change"))}
    const label=p.label.toUpperCase();$("authenticMasterStatus").textContent="APPLIED · "+label+" · ALL FOUR PROCESSORS CONFIGURED";status("AUTHENTIC MASTERING APPLIED · "+label);
   };
+  const scanButton=$("scanMasterRecommendations"),scanSummary=$("masterScanSummary"),recommendationList=$("masterRecommendationList");
+  const scanMix=()=>{
+   if(!tracks.length){if(scanSummary)scanSummary.textContent="IMPORT AUDIO TRACKS BEFORE ANALYSIS.";return}
+   const active=tracks.filter(t=>shouldPlay(t));
+   if(!active.length){scanSummary.textContent="ALL TRACKS ARE MUTED OR EXCLUDED BY SOLO. ENABLE AT LEAST ONE TRACK.";return}
+   const total=maxDuration(),samples=18000,step=total/Math.max(1,samples),left=[],right=[];
+   let peak=0,sum=0,lowEnergy=0,midEnergy=0,highEnergy=0,cross=0,leftEnergy=0,rightEnergy=0,prevLow=0,prevMid=0;
+   for(let n=0;n<samples;n++){
+    const time=n*step;let l=0,r=0;
+    for(const t of active){
+     const rel=time-t.offset;if(rel<t.trimStart||rel>=t.trimEnd)continue;
+     const pos=Math.min(t.buffer.length-1,Math.max(0,Math.floor(rel*t.buffer.sampleRate)));
+     const vol=t.settings.volume??1,pan=t.settings.pan??0;
+     const lg=pan>0?1-pan:1,rg=pan<0?1+pan:1;
+     l+=(t.buffer.getChannelData(0)[pos]||0)*vol*lg;
+     r+=(t.buffer.numberOfChannels>1?(t.buffer.getChannelData(1)[pos]||0):(t.buffer.getChannelData(0)[pos]||0))*vol*rg;
+    }
+    const mono=(l+r)*.5;peak=Math.max(peak,Math.abs(mono));sum+=mono*mono;
+    prevLow=prevLow*.94+mono*.06;const low=prevLow;
+    prevMid=prevMid*.72+(mono-low)*.28;const mid=prevMid,high=mono-low-mid;
+    lowEnergy+=low*low;midEnergy+=mid*mid;highEnergy+=high*high;
+    cross+=l*r;leftEnergy+=l*l;rightEnergy+=r*r;
+   }
+   const rms=Math.sqrt(sum/samples),crest=peak/Math.max(.00001,rms),totalTone=Math.max(.000001,lowEnergy+midEnergy+highEnergy);
+   const lowRatio=lowEnergy/totalTone,midRatio=midEnergy/totalTone,highRatio=highEnergy/totalTone;
+   const corr=cross/Math.sqrt(Math.max(.000001,leftEnergy*rightEnergy));
+   const db=20*Math.log10(Math.max(.000001,rms)),peakDb=20*Math.log10(Math.max(.000001,peak));
+   const candidates=[
+    {key:"balanced",name:"Balanced Streaming",score:78,why:"A neutral all-round starting point."},
+    {key:"afrobeats",name:"Afrobeats / Amapiano",score:72,why:"A balanced low-end lift with open top end."},
+    {key:"hiphop",name:"Hip-Hop / Rap",score:70,why:"A punch-focused profile for rhythm-led mixes."},
+    {key:"vocal",name:"Vocal Clarity",score:70,why:"Adds presence while controlling excess low end."},
+    {key:"acoustic",name:"Dynamic / Natural",score:70,why:"A gentler profile that preserves dynamics."},
+    {key:"cinematic",name:"Cinematic Width",score:68,why:"A restrained tonal shape with a wider stereo field."}
+   ];
+   for(const c of candidates){
+    if(c.key==="balanced")c.score+=Math.max(0,10-Math.abs(lowRatio-.34)*20-Math.abs(highRatio-.28)*20);
+    if(c.key==="afrobeats")c.score+=(lowRatio>.34?10:0)+(highRatio>.2?5:0);
+    if(c.key==="hiphop")c.score+=(crest>3.2?12:0)+(lowRatio>.3?5:0);
+    if(c.key==="vocal")c.score+=(midRatio>.22?8:0)+(lowRatio>.4?7:0);
+    if(c.key==="acoustic")c.score+=(crest>4?12:0)+(crest<2.4?4:0);
+    if(c.key==="cinematic")c.score+=(corr>.15&&corr<.85?10:0)+(crest>3?4:0);
+   }
+   candidates.sort((a,b)=>b.score-a.score);
+   const top=candidates.slice(0,3);
+   scanSummary.textContent="MIX SCAN · RMS "+db.toFixed(1)+" dBFS · PEAK "+peakDb.toFixed(1)+" dBFS · CREST "+crest.toFixed(1)+":1 · LOW "+Math.round(lowRatio*100)+"% · MID "+Math.round(midRatio*100)+"% · HIGH "+Math.round(highRatio*100)+"% · STEREO CORRELATION "+corr.toFixed(2);
+   recommendationList.innerHTML=top.map((c,i)=>'<article class="master-recommendation'+(i===0?' best':'')+'"><div class="recommend-rank">#'+(i+1)+'</div><div class="recommend-copy"><strong>'+c.name+'</strong><small>'+c.why+'</small><span>FIT SCORE · '+Math.min(99,Math.round(c.score))+'/100</span></div><button type="button" data-recommend-master="'+c.key+'">APPLY</button></article>').join("");
+   recommendationList.querySelectorAll("[data-recommend-master]").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.recommendMaster;applyAuthentic(key);scanSummary.textContent="RECOMMENDED PROFILE APPLIED · "+masterProfiles[key].label.toUpperCase()+" · AUDITION AND FINE-TUNE BEFORE EXPORT.";}));
+   status("SONG ANALYSIS COMPLETE · TOP 3 MASTERING PROFILES RANKED");
+  };
+  scanButton?.addEventListener("click",scanMix);
   const setMode=mode=>{
    manual.hidden=mode!=="manual";automatic.hidden=mode!=="authentic";
    modes.querySelectorAll("[data-master-mode]").forEach(button=>{const active=button.dataset.masterMode===mode;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))});

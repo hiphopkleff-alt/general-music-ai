@@ -77,3 +77,19 @@
 .manual-mastering-content{padding-top:3px}.manual-mastering-content .mastering,.manual-mastering-content .limiter-panel,.manual-mastering-content .stereo-panel{margin-bottom:12px}
 .manual-mastering-content .mastering{margin-top:0}
 @media(max-width:650px){.mastering-channel-trigger{padding:13px}.master-mode-tabs{grid-template-columns:1fr}.authentic-heading{flex-direction:column}.authentic-heading>span{white-space:normal}.authentic-actions{align-items:flex-start;flex-direction:column;width:100%}.authentic-apply{width:100%}.authentic-includes{grid-template-columns:1fr 1fr}}
+
+
+/* AI mastering recommendations */
+.ai-master-recommend{margin:16px 0;padding:15px;border:1px solid rgba(56,216,255,.25);border-radius:14px;background:linear-gradient(135deg,rgba(37,140,255,.09),rgba(56,216,255,.035))}
+.ai-master-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ai-master-head h3{margin:4px 0;font-size:15px}.ai-master-head p{margin:5px 0;color:var(--muted,#9eb0c7);font-size:12px;line-height:1.5}
+.ai-master-head small{color:#38d8ff;font-size:10px;letter-spacing:1px}
+.ai-master-head button,.master-recommendation button{border:1px solid #38d8ff;background:rgba(37,140,255,.16);color:#eaf8ff;border-radius:9px;padding:10px 12px;font-weight:800;font-size:11px;white-space:nowrap}
+.master-scan-summary{margin:12px 0;padding:10px;border-radius:9px;background:rgba(0,0,0,.2);color:#b9cde0;font-size:11px;line-height:1.6}
+.master-recommendation-list{display:grid;gap:8px}
+.master-recommendation{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid rgba(150,180,210,.15);border-radius:10px;background:rgba(0,0,0,.16)}
+.master-recommendation.best{border-color:rgba(53,255,173,.5);box-shadow:inset 3px 0 #35ffad}
+.recommend-rank{font-size:17px;font-weight:900;color:#38d8ff;min-width:24px}
+.recommend-copy{display:grid;gap:3px;flex:1;min-width:0}.recommend-copy strong{font-size:12px}.recommend-copy small{font-size:10px;color:#a9bbce;line-height:1.4}.recommend-copy span{font-size:9px;color:#35ffad;letter-spacing:.6px}
+.master-ai-note{display:block;margin-top:10px;color:#8297ad;font-size:10px;line-height:1.5}
+@media(max-width:560px){.ai-master-head{align-items:flex-start;flex-direction:column}.ai-master-head button{width:100%}.master-recommendation{gap:7px;padding:8px}.master-recommendation button{padding:8px}}

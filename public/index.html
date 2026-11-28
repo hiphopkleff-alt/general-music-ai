@@ -43,7 +43,12 @@
 <a href="/library" data-page="library">▶️ Library</a>
 
 <a href="/settings" data-page="settings">⚙️ Settings</a>
-<a href="/studio/" target="_self">🎚️ Professional Studio</a>
+<div class="studio-nav-dropdown" id="professionalStudioNav">
+<button type="button" class="studio-nav-trigger" id="professionalStudioTrigger" aria-expanded="false" aria-controls="professionalStudioMenu">🎚️ Professional Studio <span class="studio-nav-chevron">⌄</span></button>
+<div class="studio-nav-menu" id="professionalStudioMenu" hidden>
+<a href="/studio/mixing/">🎙️ Recording &amp; Mixing Studio</a>
+<a href="/studio/mastering/">🎚️ Mastering Studio</a>
+</div></div>
 
    </nav>
 
@@ -373,4 +378,4 @@
 
 </footer><!-- ==================================
      APPLICATION JAVASCRIPT
-================================== --><script src="/app.js?v=6"></script></body></html>
+================================== --><script src="/app.js?v=7"></script></body></html>

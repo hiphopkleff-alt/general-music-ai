@@ -19,7 +19,7 @@
 
  function initMasteringChannel(loudProfiles,applyMasterPreset,applyLoudnessProfile){
   const main=document.querySelector("main"),master=document.querySelector(".mastering"),limiter=document.querySelector(".limiter-panel"),stereo=document.querySelector(".stereo-panel");
-  if(!main||!master||!limiter||!stereo||$("masteringChannelShell"))return;
+  if(!main||!master||$("masteringChannelShell")){console.warn("Mastering Channel initialization deferred: required Studio elements not ready.",{main:!!main,master:!!master,limiter:!!limiter,stereo:!!stereo});return;}
   const shell=document.createElement("section");shell.id="masteringChannelShell";shell.className="mastering-channel-shell";
   const trigger=document.createElement("button");trigger.type="button";trigger.className="mastering-channel-trigger";trigger.setAttribute("aria-expanded","false");trigger.innerHTML='<span><small>PROFESSIONAL STUDIO</small><strong>MASTERING CHANNEL</strong><em>Choose your mastering workflow</em></span><b class="mastering-chevron">＋</b>';
   const body=document.createElement("div");body.className="mastering-channel-body";body.hidden=true;
@@ -62,7 +62,7 @@
    if(presetWrap)presetWrap.hidden=false;if(target)target.disabled=false;if(ceiling)ceiling.disabled=false;
    if(mode==="authentic"){if(preset.value)applyAuthentic()}else status("MANUAL MASTERING · EACH PROCESSOR IS INDEPENDENT");
   };
-  shell.append(trigger,body);body.append(modes,manual,automatic);main.insertBefore(shell,master);manual.append(master,limiter,stereo);
+  shell.append(trigger,body);body.append(modes,manual,automatic);main.insertBefore(shell,master);manual.append(master);if(limiter)manual.append(limiter);if(stereo)manual.append(stereo);
   trigger.addEventListener("click",()=>{body.hidden=!body.hidden;trigger.setAttribute("aria-expanded",String(!body.hidden));trigger.querySelector(".mastering-chevron").textContent=body.hidden?"＋":"−";});
   modes.querySelectorAll("[data-master-mode]").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.masterMode)));
   preset.addEventListener("change",applyAuthentic);$("applyAuthenticMaster").addEventListener("click",applyAuthentic);
@@ -94,7 +94,7 @@
  function stopSources(){sources.forEach(s=>{try{s.stop()}catch(e){}try{s.disconnect()}catch(e){}});sources=[];tracks.forEach(t=>{if(t.nodes){try{t.nodes.low.disconnect()}catch(e){}t.nodes=null}})}
  function pause(){if(!playing)return;pausedAt=currentTime();playing=false;clearInterval(timer);stopSources();status("PAUSED");updateTransport()}
  function stop(){playing=false;clearInterval(timer);stopSources();pausedAt=0;status(tracks.length?"SESSION READY · "+tracks.length+" TRACKS":"NO PROJECT LOADED");updateTransport()}
- initMasterUI();setInterval(updateMasterMeter,100);
+ try{initMasterUI();}catch(masterInitError){console.error("Mastering UI initialization error:",masterInitError);const fallback=document.createElement("div");fallback.className="mastering-init-error";fallback.textContent="MASTERING CHANNEL COULD NOT INITIALIZE · "+(masterInitError.message||"Please reload Studio");const main=document.querySelector("main");if(main)main.prepend(fallback);}setTimeout(()=>{if(!document.getElementById("masteringChannelShell")){try{initMasterUI();}catch(retryError){console.error("Mastering UI retry failed:",retryError);}}},350);setInterval(updateMasterMeter,100);
  $("playBtn").addEventListener("click",()=>playing?pause():play());$("stopBtn").addEventListener("click",stop);
  seek.addEventListener("input",()=>{pausedAt=duration*Number(seek.value)/1000;updateTransport();if(playing)play()});
  $("importBtn").addEventListener("click",()=>input.click());$("emptyImport").addEventListener("click",()=>input.click());input.addEventListener("change",()=>{importFiles([...input.files]);input.value=""});
